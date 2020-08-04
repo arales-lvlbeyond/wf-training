@@ -23,29 +23,36 @@
 
     <noopStep name="Display Collection Items"
               executionLabelExpression="Contents ${subject.items.size()} | ${allItems}"
-              nextStep="Get Meta"
+              nextStep="setting asset info"
     >
     </noopStep>
 
-    <executeSubflowStep name="Get Meta" targetWorkflowId="GetMetaadataOnAsset"
-                        nextStep="end"
-
-                        resultDataDef="metadataJson"
-                        subjectChangePath="${asset1}"
-                        subflowTargetDataDef="asset1"
-
+    <setContextData name="setting asset info"
+                    nextStep="end"
+                    targetDataDef="metadataFieldValue"
+                    valueExpression="${asset1.metadata.testValueA}"
     >
-        
-    </executeSubflowStep>
+    </setContextData>
+
+<!--    <executeSubflowStep name="Get Meta" targetWorkflowId="GetMetaadataOnAsset"-->
+<!--                        nextStep="end"-->
+<!--                        resultDataDef="metadataJson"-->
+<!--                        subjectChangePath="${asset1}"-->
+<!--                        subflowTargetDataDef="asset1"-->
+
+<!--    >-->
+
+<!--    </executeSubflowStep>-->
 
 
 
 
     <noopStep name="end"/>
     <contextDataDef name="allItems"                     dataType="Data Object"      hidden="true"      multiple="true"     defaultDataExpression="${subject.getItems()}"/>
-    <contextDataDef name="asset1" dataType="Data Object" defaultDataExpression="${allItems[0]}"/>
+    <contextDataDef name="asset1" dataType="Data Object" defaultDataExpression="${allItems[0].asset}"/>
     <contextDataDef name="fileType" dataType="String"   defaultDataExpression= "${allItems.size() > 0 ? allItems[0].assetType: 'None'}"/>
     <contextDataDef name="metadataJson" dataType= "JSON" hidden ="false"/>
+    <contextDataDef name="metadataFieldValue" dataType="String" defaultDataExpression="${asset1.metadata.testValueA}"/>
 
 
 
