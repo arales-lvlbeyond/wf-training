@@ -1,0 +1,52 @@
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="Exercise1GW"
+          name="Exercise1GW"
+          executionLabelExpression="Exercise1GW | "
+          subjectDOClassName="AssetCollection"
+          showInUserInterface="true"
+          sdkVersion=""
+
+>
+
+    <initialStepName>Display Collection Name</initialStepName>
+
+
+
+    <noopStep name="Display Collection Name"
+              displayName="Name"
+              executionLabelExpression="${subject.name}"
+              nextStep="Display Collection Items"
+    />
+
+    <noopStep name="Display Collection Items"
+              executionLabelExpression="Contents ${subject.items.size()} | ${allItems}"
+              nextStep="Get Meta"
+    >
+    </noopStep>
+
+    <executeSubflowStep name="Get Meta" targetWorkflowId="GetMetaadataOnAsset"
+                        nextStep="end"
+
+                        resultDataDef="metadataJson"
+                        subjectChangePath="${asset1}"
+                        subflowTargetDataDef="asset1"
+
+    >
+        
+    </executeSubflowStep>
+
+
+
+
+    <noopStep name="end"/>
+    <contextDataDef name="allItems"                     dataType="Data Object"      hidden="true"      multiple="true"     defaultDataExpression="${subject.getItems()}"/>
+    <contextDataDef name="asset1" dataType="Data Object" defaultDataExpression="${allItems[0]}"/>
+    <contextDataDef name="fileType" dataType="String"   defaultDataExpression= "${allItems.size() > 0 ? allItems[0].assetType: 'None'}"/>
+    <contextDataDef name="metadataJson" dataType= "JSON" hidden ="false"/>
+
+
+
+</workflow>
