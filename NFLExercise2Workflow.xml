@@ -32,6 +32,7 @@
     <noopStep name="check collection name"
               executionLabelExpression="Collection Name: ${subject.name} , Number of assets: ${subject.items.size().toString()}"
               nextStep="display FirstAsset info"
+<<<<<<< HEAD
     />
 
     <noopStep name="display FirstAsset info"
@@ -42,6 +43,13 @@
                     targetDataDef="metadataTestValueA"
                     valueExpression="${FirstAsset.metadata.testValueA}"
                     nextStep="end" />
+=======
+    ></noopStep>
+
+    <noopStep name="display FirstAsset info"
+              executionLabelExpression="File Type: ${FirstAssetFileType} | TestValueA: ${metadataTestValueA}"
+              nextStep="end" />
+>>>>>>> workflow exercises day 1
 
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -55,6 +63,7 @@
     <!-- ......... PROCESSING ........... -->
     <contextDataDef name="startTime"             dataType="Date/Time"                         defaultDataExpression="${#newDate()}"/>
     <contextDataDef name="AssetMasterList"       dataType="String"    multiple="true"         defaultDataExpression="${subject.items.![itemName]}"/>
+<<<<<<< HEAD
     <contextDataDef name="FirstAsset" dataType="Data Object" defaultDataExpression="${subject.items[0].asset}"/>
     <contextDataDef name="metadataTestValueA" dataType="Integer" defaultDataExpression="${FirstAsset.metadata.testValueA}" />
     <contextDataDef name="FirstAssetFileType" dataType="String" defaultDataExpression="${FirstAsset.assetType}"/>
@@ -62,4 +71,9 @@
 
 
 
+=======
+    <contextDataDef name="FirstAsset" dataType="String" defaultDataExpression="${subject.items[0]}"/>
+    <contextDataDef name="FirstAssetFileType" dataType="String" defaultDataExpression="${FirstAsset.itemType}"/>
+    <contextDataDef name="metadataTestValueA" dataType="String" defaultDataExpression="${#getMetadata(FirstAsset)}" />
+>>>>>>> workflow exercises day 1
 </workflow>
