@@ -47,9 +47,19 @@
     ></noopStep>
 
     <noopStep name="display FirstAsset info"
+<<<<<<< HEAD
               executionLabelExpression="File Type: ${FirstAssetFileType} | TestValueA: ${metadataTestValueA}"
               nextStep="end" />
 >>>>>>> workflow exercises day 1
+=======
+              executionLabelExpression="First File: ${FirstAsset} | File Type: ${FirstAssetFileType}"
+              nextStep="setting asset info" />
+
+    <setContextData name="setting asset info"
+                    targetDataDef="metadataTestValueA"
+                    valueExpression="${FirstAsset.metadata.testValueA}"
+                    nextStep="end" />
+>>>>>>> fixes to workflow exercises 1 and 2
 
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -64,6 +74,7 @@
     <contextDataDef name="startTime"             dataType="Date/Time"                         defaultDataExpression="${#newDate()}"/>
     <contextDataDef name="AssetMasterList"       dataType="String"    multiple="true"         defaultDataExpression="${subject.items.![itemName]}"/>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <contextDataDef name="FirstAsset" dataType="Data Object" defaultDataExpression="${subject.items[0].asset}"/>
     <contextDataDef name="metadataTestValueA" dataType="Integer" defaultDataExpression="${FirstAsset.metadata.testValueA}" />
     <contextDataDef name="FirstAssetFileType" dataType="String" defaultDataExpression="${FirstAsset.assetType}"/>
@@ -76,4 +87,13 @@
     <contextDataDef name="FirstAssetFileType" dataType="String" defaultDataExpression="${FirstAsset.itemType}"/>
     <contextDataDef name="metadataTestValueA" dataType="String" defaultDataExpression="${#getMetadata(FirstAsset)}" />
 >>>>>>> workflow exercises day 1
+=======
+    <contextDataDef name="FirstAsset" dataType="Data Object" defaultDataExpression="${subject.items[0].asset}"/>
+    <contextDataDef name="metadataTestValueA" dataType="Integer" defaultDataExpression="${FirstAsset.metadata.testValueA}" />
+    <contextDataDef name="FirstAssetFileType" dataType="String" defaultDataExpression="${FirstAsset.itemType}"/>
+
+
+
+
+>>>>>>> fixes to workflow exercises 1 and 2
 </workflow>
