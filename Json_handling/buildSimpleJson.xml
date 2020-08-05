@@ -52,7 +52,8 @@
 				// fill up sample array field
 				def testArray = [1, 2, 'String A', true]
 				json.arrayField = testArray
-				JsonOutput.toJson(json)
+				
+				return JsonOutput.toJson(json)
 			]]>
 		</script>
 	</groovyStep>
