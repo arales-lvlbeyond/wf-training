@@ -1,0 +1,938 @@
+<!--
+Contents of runExifToolCreateDate.sh
+#!/bin/bash
+
+fileForMeta="${1}"
+nvpOrjson="${2}"
+exifArg="${3}"
+
+/usr/local/bin/exifTool -xmp:Label -CreateDate -d '%F' "${fileForMeta}" -j
+-->
+
+
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://levelsbeyond.com/schema/workflow"
+	xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+	xsi:schemaLocation="
+	http://levelsbeyond.com/schema/workflow  http://www.reachengine.com/schema/studio1_7_35/studio.xsd
+	"
+	sdkVersion="4.2"
+ id="dtvIngestVideoAsset"
+ name="Ingest Video Asset"
+ executionLabelExpression="Ingest video file ${fileToIngest.name} into repository"
+ description="
+ ----------------------------------
+ Required Scripts START
+ 1. runExifToolCreateDate.sh
+ Required Scripts END
+ ----------------------------------
+
+ ----------------------------------
+ Required Execution Server Properties START
+ Required Execution Server Properties END
+ ----------------------------------
+
+ ----------------------------------
+ Required Properties START
+ 1. imagemagick.path=
+ 2. temp.dir=
+ Required Properties END
+ ----------------------------------
+
+ ----------------------------------
+ Required Metadata START
+ 1. createDate=calendar
+ Required Metadata END
+ ----------------------------------
+
+ ----------------------------------
+ Required Variables START
+ Required Variables END
+ ----------------------------------
+
+ ----------------------------------
+ Required Categories START
+ Required Categories END
+ ----------------------------------
+
+ ----------------------------------
+ Description:
+ Ingest Video into ReachEngine using ffmpeg
+ ----------------------------------
+
+ ----------------------------------
+ TODO START
+ TODO END
+ ----------------------------------
+
+ ----------------------------------
+ NOTES START
+ Setup this flow to ingest video assets with creation date
+ NOTES END
+ ----------------------------------
+
+ "
+ subjectDOClassName=""
+ showInUserInterface="false"
+ group="Custom_Workflows"
+ resultDataDef="assetVersion"
+ deadlineExpression="">
+
+	<initialStepName>init existing asset content</initialStepName>
+
+
+	<setContextData name="init existing asset content"
+		targetDataDef="existingAssetContent"
+		valueExpression="${#assetService().getAssetContent(fileToIngest)}"
+	>
+		<transition condition="${true}">
+			<targetStepName>set fileToIngestFullPath</targetStepName>
+		</transition>
+
+	</setContextData>
+
+	<setContextData name="set fileToIngestFullPath"
+		targetDataDef="fileToIngestFullPath"
+		valueExpression="${#absPath(fileToIngest)}">
+		<transition condition="${true}">
+			<targetStepName>check for existing asset</targetStepName>
+		</transition>
+	</setContextData>
+
+	<noopStep name="check for existing asset"
+		executionLabelExpression="existingAssetContent id is ${existingAssetContent.id}"
+		>
+		<transition condition="${existingAssetContent != null}">
+			<targetStepName>set existing asset version</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>check if duplicate asset names are allowed</targetStepName>
+		</transition>
+	</noopStep>
+
+	<noopStep name="check if duplicate asset names are allowed">
+		<transition condition="${allowDuplicateNamesFlag}">
+			<targetStepName>set skip mezzanine flag</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>convert file name for duplicate asset check</targetStepName>
+		</transition>
+	</noopStep>
+
+    <setContextData name="convert file name for duplicate asset check"
+        targetDataDef="fileToIngestName"
+        valueExpression="${T(org.apache.commons.lang.StringEscapeUtils).escapeXml(fileToIngest.name)}">
+        <transition condition="${true}">
+        	<targetStepName>check for duplicate asset</targetStepName>
+        </transition>
+    </setContextData>
+
+	<!-- Is fileToIngest located within a repoRoot - If so, then check for dupe assetInPlace - based on full path - else do regular check for dupe asset -->
+
+	<queryStep name="check for duplicate asset"
+		targetDataObjectClass="AssetVersion"
+		resultDataDef="existingAssetVersion">
+		<transition condition="true">
+			<targetStepName>compare filePath</targetStepName>
+		</transition>
+		<criteria>
+            <![CDATA[
+            <criteria>
+            <and>
+                <condition property="name" op="eq"><test value="${fileToIngestName}"/></condition>
+                <condition property="currentVersionFlag" op="eq"><test value="true"/></condition>
+            </and>
+            </criteria>
+            ]]>
+		</criteria>
+	</queryStep>
+
+	<noopStep name="compare filePath"
+		executionLabelExpression="existingAssetVersion = ${existingAssetVersion.filePath} and fileToIngestFullPath is ${fileToIngestFullPath}"
+		>
+		<transition condition="${existingAssetVersion.filePath == fileToIngestFullPath}">
+			<targetStepName>declare updated asset</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>declare new asset</targetStepName>
+		</transition>
+	</noopStep>
+
+	<setContextData name="declare new asset"
+					targetDataDef="newOrUpdate"
+					valueExpression="new"
+		>
+		<transition condition="true">
+			<targetStepName>set skip mezzanine flag</targetStepName>
+		</transition>
+	</setContextData>
+
+	<setContextData name="declare updated asset"
+					targetDataDef="newOrUpdate"
+					valueExpression="update"
+		>
+		<transition condition="true">
+			<targetStepName>set existing asset master</targetStepName>
+		</transition>
+	</setContextData>
+
+<!--	<queryStep name="check for duplicate asset"
+		targetDataObjectClass="AssetVersion"
+		resultDataDef="existingAssetVersion">
+		<transition condition="${existingAssetVersion != null}">
+			<targetStepName>set existing asset master</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>set skip mezzanine flag</targetStepName>
+		</transition>
+		<criteria>
+			<![CDATA[
+            <criteria>
+            <and>
+                <condition property="name" op="eq"><test value="${fileToIngestName}"/></condition>
+                <condition property="currentVersionFlag" op="eq"><test value="true"/></condition>
+            </and>
+            </criteria>
+            ]]>
+		</criteria>
+	</queryStep>-->
+
+	<setContextData name="set existing asset version"
+		targetDataDef="existingAssetVersion"
+		valueExpression="${existingAssetContent.asset.currentVersion}"
+		>
+		<transition condition="${true}">
+			<targetStepName>set existing asset master</targetStepName>
+		</transition>
+
+	</setContextData>
+
+	<setContextData name="set existing asset master"
+		targetDataDef="existingAssetMaster"
+		valueExpression="${existingAssetVersion.masterAsset}"
+		executionLabelExpression="existingAssetVersion is ${existingAssetVersion}"
+		>
+		<transition condition="${true}">
+			<targetStepName>set asset version</targetStepName>
+		</transition>
+
+	</setContextData>
+
+	<setContextData name="set asset version"
+		targetDataDef="assetVersion"
+		valueExpression="${existingAssetVersion}"
+		executionLabelExpression="existingAssetMaster is ${existingAssetMaster} and existingAssetVersion is ${existingAssetVersion}"
+		>
+		<transition condition="${true}">
+			<targetStepName>log content lengths</targetStepName>
+		</transition>
+
+	</setContextData>
+
+	<testStep name="log content lengths"
+		devStep="true"
+		outputExpression="incoming file length = ${fileToIngest.length}, current asset file length = ${existingAssetVersion.originalContent.fileSize}"
+	 	continueOnException="true"
+	>
+		<exception-transition type="WorkflowException">
+			<targetStepName>set skip mezzanine flag</targetStepName>
+		</exception-transition>
+		<transition condition="=true">
+			<targetStepName>compare content length</targetStepName>
+		</transition>
+
+	</testStep>
+
+	<noopStep name="compare content length">
+   		<transition condition="${fileToIngest.length == existingAssetVersion.originalContent.fileSize}">
+			<targetStepName>check for asset metadata</targetStepName>
+		</transition>
+		<transition condition="${existingAssetContent != null}">
+			<targetStepName>check for asset metadata</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>set skip mezzanine flag</targetStepName>
+		</transition>
+	</noopStep>
+
+	<!-- default the skip mezz flag.  If set by invocation use, otherwise base on whether a mezz template has been set -->
+	<setContextData name="set skip mezzanine flag"
+		targetDataDef="skipMezzanineFlag"
+		valueExpression="${skipMezzanineFlag ?: (mezzanineTemplate == null)}"
+		>
+
+		<transition condition="${newOrUpdate == 'new'}">
+			<targetStepName>ingest new file</targetStepName>
+		</transition>
+		<transition condition="${newOrUpdate == 'update'}">
+			<targetStepName>ingest file for duplicate</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>ingest new file</targetStepName>
+		</transition>
+	</setContextData>
+
+    <saveAssetStep name="ingest new file"
+    	executionLabelExpression="Ingesting file ${fileToIngest.path} as new asset"
+    	contentExpression="${fileToIngest}"
+    	contentUseExpression="${skipMezzanineFlag ? '|SOURCE|MEZZANINE|' : 'SOURCE'}"
+    	pctComplete="10"
+    	resultDataDef="assetVersion">
+
+    	<transition condition="=true">
+    		<targetStepName>check for asset metadata</targetStepName>
+    	</transition>
+    </saveAssetStep>
+
+	<saveAssetStep name="ingest file for duplicate"
+		executionLabelExpression="Ingesting file ${fileToIngest.path} to assetVersion ${existingAssetVersion}"
+		contentExpression="${fileToIngest}"
+		assetExpression="${existingAssetVersion}"
+		contentUseExpression="${skipMezzanineFlag ? '|SOURCE|MEZZANINE|' : 'SOURCE'}"
+		pctComplete="10"
+		resultDataDef="assetVersion">
+
+		<transition condition="=true">
+			<targetStepName>check for asset metadata</targetStepName>
+		</transition>
+	</saveAssetStep>
+
+    <noopStep name="check for asset metadata">
+    	<transition condition="${metadata != null and metadata.size() > 0}">
+    		<targetStepName>save asset metadata</targetStepName>
+    	</transition>
+    	<transition condition="${jsonMetadata != null}">
+    		<targetStepName>save asset metadata</targetStepName>
+    	</transition>
+    	<transition condition="=true">
+    		<targetStepName>query for existing timeline</targetStepName>
+    	</transition>
+    </noopStep>
+
+    <saveDataObjectStep name="save asset metadata"
+    	dataObjectExpression="${assetVersion.masterAsset.metadata}"
+    	nameValuePairsDataDef="metadata"
+    	jsonValuesDataDef="jsonMetadata"
+    	executionLabelExpression="assetVersion is ${assetVersion}"
+    >
+    	<transition condition="=true">
+    		<targetStepName>query for existing timeline</targetStepName>
+    	</transition>
+    </saveDataObjectStep>
+
+	<queryStep name="query for existing timeline"
+		targetDataObjectClass="Timeline"
+		resultDataDef="timeline"
+		executionLabelExpression="assetVersion.masterAsset.id is ${assetVersion.masterAsset.id} - assetVersion is ${assetVersion} - assetVersion.masterAsset is ${assetVersion.masterAsset}"
+		>
+		<transition condition="${assetVersion.originalContent == null}">
+			<targetStepName>check if duplicate asset names are allowed</targetStepName>
+		</transition>
+		<transition condition="${timeline != null}">
+			<targetStepName>extract exif creation date</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>create timeline</targetStepName>
+		</transition>
+		<criteria>
+			<![CDATA[
+			<criteria>
+			<and>
+                <condition property="media.timelineAsset.asset.id" op="eq"><test value="${assetVersion.masterAsset.id}"/></condition>
+            </and>
+            </criteria>
+			]]>
+		</criteria>
+	</queryStep>
+
+	<saveDataObjectStep name="create timeline"
+		targetDataObjectClass="Timeline"
+		resultDataDef="timeline"
+		executionLabelExpression="assetVersion string here is ${assetVersion.masterAsset.toDataObjectRef().toString()}"
+		>
+		<transition condition="=true">
+			<targetStepName>create timeline video</targetStepName>
+		</transition>
+		<property name="name">${assetVersion.name}</property>
+		<property name="targetFramerate">${T(com.routeto1.asset.video.util.Framerate).getFramerate(assetVersion.originalContent.frameRate)}</property>
+		<property name="timecodeFormat">${assetVersion.originalContent.timecodeFormat}</property>
+		<property name="type">VIDEO_TIMELINE</property>
+		<property name="zeroTime">${assetVersion.originalContent.startTime ?: 3600.0}</property>
+		<property name="timelineAssets">
+			<![CDATA[
+			{
+				_class: "TimelineAsset",
+				asset: "${assetVersion.masterAsset.toDataObjectRef().toString()}"
+			}
+			]]>
+		</property>
+	</saveDataObjectStep>
+
+	<saveDataObjectStep name="create timeline video"
+		targetDataObjectClass="TimelineVideo" resultDataDef="${ timelineVideo }">
+		<transition condition="=true">
+			<targetStepName>extract exif creation date</targetStepName>
+		</transition>
+		<property name="timeline">${timeline}</property>
+		<property name="timelineAsset">${timeline.timelineAssets[0]}</property>
+		<property name="timelineStartOffset">0.0</property>
+		<property name="timelineEndOffset">${timeline.timelineAssets[0].asset.originalContent.duration}</property>
+		<property name="track">
+			<![CDATA[
+			{
+				_class: "TimelineTrack",
+				name: "Video 1",
+				primaryFlag: "true",
+				mediaType: "VIDEO"
+			}
+			]]>
+		</property>
+	</saveDataObjectStep>
+
+
+	<runCommandStep name="extract exif creation date"
+		executionLabelExpression="fileToIngestFullPath is ${fileToIngestFullPath}"
+		executablePathExpression="/bin/sh"
+		pctComplete="20"
+		continueOnException="true"
+		stdoutDataDef="createDateRaw"
+		>
+		<exception-transition type="WorkflowException">
+			<targetStepName>save timeline metadata</targetStepName>
+		</exception-transition>
+		<transition condition="true">
+			<targetStepName>set createDateJSON</targetStepName>
+		</transition>
+
+		<arg>-c</arg>
+		<arg>/reachengine/utilities/runExifToolCreateDate.sh "${fileToIngestFullPath}"</arg>
+
+	</runCommandStep>
+
+
+	<setContextData name="set createDateJSON"
+		targetDataDef="createDateJSON"
+		valueExpression="${createDateRaw}"
+		executionLabelExpression="createDateRaw is ${createDateRaw}"
+		>
+		<transition condition="true">
+			<targetStepName>set cleanCreationDate</targetStepName>
+		</transition>
+	</setContextData>
+
+	<setContextData name="set cleanCreationDate"
+		targetDataDef="cleanCreationDate"
+		valueExpression="${createDateJSON['CreateDate']}"
+		continueOnException="true"
+		>
+		<exception-transition type="EvaluationException">
+			<targetStepName>set cleanCreationDate to shootDate</targetStepName>
+		</exception-transition>
+		<transition condition="true">
+			<targetStepName>save creation date</targetStepName>
+		</transition>
+	</setContextData>
+
+	<setContextData name="set cleanCreationDate to shootDate"
+		targetDataDef="cleanCreationDate"
+		valueExpression="${jsonMetadata['shootDate']}"
+		continueOnException="true"
+		>
+		<transition condition="true">
+			<targetStepName>save creation date</targetStepName>
+		</transition>
+	</setContextData>
+
+	<saveDataObjectStep name="save creation date"
+		dataObjectExpression="${timeline.metadata}"
+		jsonValuesDataDef="createDateJSON"
+		executionLabelExpression="Saving Creation Date to Timeline - ${cleanCreationDate} "
+		>
+
+		<transition condition="=true">
+			<targetStepName>extract mediaInfo</targetStepName>
+		</transition>
+
+	</saveDataObjectStep>
+
+	<runCommandStep name="extract mediaInfo"
+		executionLabelExpression="fileToIngestFullPath is ${fileToIngestFullPath}"
+		executablePathExpression="/bin/sh"
+		pctComplete="20"
+		continueOnException="true"
+		stdoutDataDef="mediaInfoString"
+	>
+		<exception-transition type="WorkflowException">
+			<targetStepName>save timeline metadata</targetStepName>
+		</exception-transition>
+		<transition condition="true">
+			<targetStepName>set mediaInfoXML</targetStepName>
+		</transition>
+
+		<arg>-c</arg>
+		<arg>/reachengine/utilities/mediainfo --Output=XML "${fileToIngestFullPath}"</arg>
+	</runCommandStep>
+
+	<setContextData name="set mediaInfoXML"
+		targetDataDef="mediaInfoXML"
+		valueExpression="${mediaInfoString}"
+		nextStep="extract ffprobeInfo"
+	/>
+
+	<runCommandStep name="extract ffprobeInfo"
+		executionLabelExpression="fileToIngestFullPath is ${fileToIngestFullPath}"
+		executablePathExpression="/bin/sh"
+		pctComplete="20"
+		continueOnException="true"
+		stdoutDataDef="ffprobeString"
+	>
+		<exception-transition type="WorkflowException">
+			<targetStepName>save mediaInfoMeta</targetStepName>
+		</exception-transition>
+		<transition condition="true">
+			<targetStepName>set ffprobeXML</targetStepName>
+		</transition>
+
+		<arg>-c</arg>
+		<arg>/usr/local/bin/ffprobe -v quiet -print_format xml -show_format -show_streams "${fileToIngestFullPath}"</arg>
+	</runCommandStep>
+
+	<setContextData name="set ffprobeXML"
+		targetDataDef="ffprobeXML"
+		valueExpression="${ffprobeString}"
+		nextStep="set_audioEncodeInfo_1st_preference"
+	/>
+
+	<setContextData name="set_audioEncodeInfo_1st_preference"
+		targetDataDef="audioEncodeInfo"
+		valueExpression="${#xpath(ffprobeXML, '//stream[@codec_type=&quot;audio&quot;]/@codec_long_name', false)?.value}"
+	>
+		<transition condition="${null == audioEncodeInfo}">
+			<targetStepName>set_audioEncodeInfo_2nd_preference</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>save mediaInfoMeta</targetStepName>
+		</transition>
+	</setContextData>
+
+	<setContextData name="set_audioEncodeInfo_2nd_preference"
+		targetDataDef="audioEncodeInfo"
+		valueExpression="${#xpath(ffprobeXML, '//stream[@codec_tag_string=&quot;ec-3&quot;]/@codec_tag_string', false)?.value}"
+		nextStep="save mediaInfoMeta"
+	/>
+
+	<saveDataObjectStep name="save mediaInfoMeta"
+		dataObjectExpression="${timeline.metadata}"
+		executionLabelExpression="Saving embedded meta to timeline"
+		nextStep="save timeline metadata"
+	>
+		<property name="videoCodec">${#xpath(mediaInfoXML, '//Commercial_name/text()', false)?.text}</property>
+		<property name="videoBitrate">${#xpath(mediaInfoXML, '//track[@type=&quot;Video&quot;]/Bit_rate/text()', false)?.text}</property>
+		<property name="videoContainer">${#xpath(mediaInfoXML, '//track[@type=&quot;General&quot;]/Format/text()', false)?.text}</property>
+		<property name="audioEncoding">${audioEncodeInfo}</property>
+	</saveDataObjectStep>
+
+    <saveDataObjectStep name="save timeline metadata"
+    	dataObjectExpression="${timeline.metadata}"
+    	nameValuePairsDataDef="metadata"
+    	jsonValuesDataDef="jsonMetadata"
+    	executionLabelExpression="other creation date is ${#parseDate('2014-10-13 04:25:23 GMT', 'yyyy-MM-dd HH:mm:ss z')}"
+    >
+    	<transition condition="${metadataRootPath != null and metadataPathProperties != null}">
+    		<targetStepName>save path metadata</targetStepName>
+    	</transition>
+    	<transition condition="=true">
+    		<targetStepName>extract exif metadata</targetStepName>
+    	</transition>
+    </saveDataObjectStep>
+
+    <nimbus:savePathMetadataStep name="save path metadata"
+    	metadataObjectExpression="${timeline.metadata}"
+    	assetFileExpression="${fileToIngest}"
+    	rootPathExpression="${metadataRootPath}"
+    	metadataPropertiesExpression="${metadataPathProperties}"
+    >
+    	<transition condition="=true">
+    		<targetStepName>extract exif metadata</targetStepName>
+    	</transition>
+    </nimbus:savePathMetadataStep>
+
+	<!-- EXIF Extraction Start -->
+
+	<executeSubflowStep name="extract exif metadata"
+		targetWorkflowId="dtvExtractExifFromFileNVP"
+		subjectChangePath="${ assetVersion.file }"
+		subflowTargetDataDef="fileToIngest"
+		resultDataDef="exifMetadata"
+		continueOnException="true"
+		pctComplete="60"
+		>
+		<exception-transition type="WorkflowException">
+			<targetStepName>check for asset category</targetStepName>
+		</exception-transition>
+		<transition condition="${exifMetadata != null}">
+			<targetStepName>apply metadata to result</targetStepName>
+		</transition>
+		<transition condition="${ true }">
+			<targetStepName>check for asset category</targetStepName>
+		</transition>
+		<subflowContextDataMapping parentDataDef="fileToIngestFullPath" subflowDataDef="fileToIngestFullPath"/>
+
+	</executeSubflowStep>
+
+	<!-- apply exif metadata to result -->
+	<nimbus:setMetadataValuesStep name="apply metadata to result"
+		displayName="Apply metadata to the asset"
+		targetExpression="${ timeline.metadata }"
+		propertyPrefixExpression="${ exifPrefix }"
+		metadataPairsExpression="${ exifMetadata }"
+		metadataGroupExpression="${ exifMetadataGroupName }"
+		createIfNotFoundExpression="${ true }"
+		continueOnException="false"
+		pctComplete="70">
+
+		<transition condition="${ true }">
+			<targetStepName>check for asset category</targetStepName>
+		</transition>
+	</nimbus:setMetadataValuesStep>
+    <noopStep name="check for asset category">
+    	<transition condition="${ categoryName != null }">
+    		<targetStepName>set asset category</targetStepName>
+    	</transition>
+    	<transition condition="${ true }">
+    		<targetStepName>check for mezzanine</targetStepName>
+    	</transition>
+    </noopStep>
+
+	<nimbus:changeMetaCategoryStep name="set asset category"
+		targetObjectExpression="${timeline}" >
+
+		<transition condition="${ true }">
+			<targetStepName>check for mezzanine</targetStepName>
+		</transition>
+
+		<nimbus:addCategory>${categoryName}</nimbus:addCategory>
+	</nimbus:changeMetaCategoryStep>
+
+	<noopStep name="check for mezzanine"
+		executionLabelExpression="Checking for mezzanine of ${assetVersion.name}."
+		pctComplete="20"
+	>
+
+		<!--  if there is already mezz content and it was sourced from this version (so no possibility of a new version), skip mezz creation -->
+		<transition condition="${#mezzanineContent(assetVersion) != null and #mezzanineContent(assetVersion).initialVersion == assetVersion}">
+			<targetStepName>check for proxy</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>check for mezz template</targetStepName>
+		</transition>
+	</noopStep>
+
+    <noopStep name="check for mezz template"
+    	executionLabelExpression="Checking for mezzanine template for ${assetVersion.name}">
+
+    	<transition condition="${!skipMezzanineFlag and mezzanineTemplate != null}">
+    		<targetStepName>create mezzanine</targetStepName>
+    	</transition>
+    	<transition condition="=true">
+    		<targetStepName>set original content as mezzanine</targetStepName>
+    	</transition>
+    </noopStep>
+
+	<executeSubflowStep name="create mezzanine"
+		targetWorkflowId="dtvCreateMezzVideo"
+		pctComplete="50"
+		subjectChangePath="=assetVersion.masterAsset">
+
+		<transition condition="=true">
+			<targetStepName>create proxy</targetStepName>
+		</transition>
+		<subflowContextDataMapping subflowDataDef="mezzTemplate" parentDataDef="mezzanineTemplate"/>
+		<subflowContextDataMapping subflowDataDef="sourceCopyPath" parentDataDef="sourceCopyPath"/>
+	</executeSubflowStep>
+
+	<saveDataObjectStep name="set original content as mezzanine"
+		targetDataObjectClass="AssetContent"
+		dataObjectExpression="${assetVersion.originalContent}">
+
+		<transition condition="${proxyTemplate != null}">
+			<targetStepName>check for proxy</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>check whether to raise event</targetStepName>
+		</transition>
+		<property name="contentUses">|SOURCE|MEZZANINE|</property>
+	</saveDataObjectStep>
+
+	<noopStep name="check for proxy"
+		executionLabelExpression="Checking for proxy of ${assetVersion.name}."
+		pctComplete="60"
+	>
+		<transition condition="${#proxyContent(assetVersion) != null and #proxyContent(assetVersion).initialVersion == assetVersion}">
+			<targetStepName>check for thumbnail video</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>create proxy</targetStepName>
+		</transition>
+	</noopStep>
+
+	<executeSubflowStep name="create proxy"
+		targetWorkflowId="dtvCreateProxyVideo"
+		subjectChangePath="=assetVersion.masterAsset"
+		pctComplete="70"
+	 	continueOnException="true"
+	 	resultDataDef="proxyFailed"
+		>
+		<transition condition="${proxyFailed == 'true'">
+			<targetStepName>set proxy fail flag</targetStepName>
+		</transition>
+		<transition condition="${ true }">
+			<targetStepName>add_asset_to_timeline</targetStepName>
+		</transition>
+
+		<subflowContextDataMapping subflowDataDef="proxyTemplate" parentDataDef="proxyTemplate"/>
+		<subflowContextDataMapping subflowDataDef="sourceCopyPath" parentDataDef="sourceCopyPath"/>
+	</executeSubflowStep>
+
+	<!-- NOTE: I dont think this step below is ever getting called -->
+	<setContextData name="set proxy fail flag"
+					targetDataDef="proxyFailed"
+					valueExpression="true"
+		>
+		<transition condition="true">
+			<targetStepName>add_asset_to_timeline</targetStepName>
+		</transition>
+	</setContextData>
+
+	<nimbus:addAssetToTimelineStep name="add_asset_to_timeline"
+		displayName="add asset to timeline"
+		executionLabelExpression="Add Asset ${assetVersion.id} to Timeline ${timeline.id} - proxyFailed is ${proxyFailed}"
+		targetTimelineExpression="${timeline}" trackNameExpression="Video 1"
+		targetAssetExpression="${assetVersion}" startOffsetExpression="0.00">
+		<transition condition="${ timelineVideo ==  null }">
+			<targetStepName>set_timeline_video</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>create thumbnail video</targetStepName>
+		</transition>
+	</nimbus:addAssetToTimelineStep>
+
+	<setContextData name="set_timeline_video"
+					displayName="set timeline video"
+					valueExpression="${timeline.videos.get(0)}" targetDataDef="timelineVideo"
+					>
+		<transition condition="${proxyFailed == 'true'}">
+			<targetStepName>update metadata failed proxy</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>create thumbnail video</targetStepName>
+		</transition>
+	</setContextData>
+
+	<saveDataObjectStep name="update metadata failed proxy"
+		dataObjectExpression="${timeline.metadata}"
+		>
+		<transition condition="true">
+			<targetStepName>check whether to raise event</targetStepName>
+		</transition>
+		<property name="proxyStatus">true</property>
+	</saveDataObjectStep>
+
+
+	<noopStep name="check for thumbnail video"
+		executionLabelExpression="Checking for thumbnail video of ${assetVersion.name}."
+		pctComplete="75"
+	>
+
+		<transition condition="${#thumbnailMovContent(assetVersion) != null and #thumbnailMovContent(assetVersion).initialVersion == assetVersion}">
+			<targetStepName>check for thumbnail</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>create thumbnail video</targetStepName>
+		</transition>
+	</noopStep>
+
+	<executeSubflowStep name="create thumbnail video"
+		targetWorkflowId="dtvCreateThumbnailVideo"
+		pctComplete="85"
+		subjectChangePath="=assetVersion.masterAsset"
+	    continueOnException="true"
+	    resultDataDef="thumbFailed"
+		>
+		<transition condition="=true">
+			<targetStepName>check if thumb failed</targetStepName>
+		</transition>
+		<subflowContextDataMapping subflowDataDef="thumbnailTemplate" parentDataDef="thumbnailVideoTemplate"/>
+		<subflowContextDataMapping subflowDataDef="sourceCopyPath" parentDataDef="sourceCopyPath"/>
+	</executeSubflowStep>
+
+	<noopStep name="check if thumb failed"
+		executionLabelExpression="thumbFailed is ${thumbFailed}"
+		>
+		<transition condition="${thumbFailed == 'true'}">
+			<targetStepName>check whether to raise event</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>create thumbnail from video</targetStepName>
+		</transition>
+	</noopStep>
+
+	<saveDataObjectStep name="update metadata failed thumb"
+		dataObjectExpression="${timeline.metadata}"
+		>
+		<transition condition="true">
+			<targetStepName>check whether to raise event</targetStepName>
+		</transition>
+		<property name="thumbStatus">true</property>
+	</saveDataObjectStep>
+
+
+	<noopStep name="check for thumbnail"
+		executionLabelExpression="Checking for thumbnail of ${assetVersion.name}."
+		pctComplete="90"
+		>
+
+		<transition condition="${#thumbnailContent(assetVersion) != null and #thumbnailContent(assetVersion).initialVersion == assetVersion}">
+			<targetStepName>check whether to raise event</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>create thumbnail video</targetStepName>
+		</transition>
+	</noopStep>
+
+	<convertImageStep name="create thumbnail from video"
+		sourceFileExpression="=#thumbnailMovFile(assetVersion)"
+		resultDataDef="thumbnailFile" >
+
+		<transition condition="=true">
+			<targetStepName>save thumbnail</targetStepName>
+		</transition>
+	</convertImageStep>
+
+	<saveAssetStep name="save thumbnail"
+		contentExpression="${thumbnailFile}"
+		assetExpression="${assetVersion}"
+		contentUseExpression="Thumbnail"
+		pctComplete="95"
+		contentTemplateExpression="Thumbnail Template"
+		versionAssetExpression="=false"
+	 	continueOnException="true"
+		>
+		<exception-transition type="ValidationException">
+			<targetStepName>check whether to raise event</targetStepName>
+		</exception-transition>
+		<transition condition="=true">
+			<targetStepName>delete thumbnail artifact</targetStepName>
+		</transition>
+	</saveAssetStep>
+
+	<deleteFileStep name="delete thumbnail artifact" sourceFilesExpression="${thumbnailFile}" continueOnException="true">
+		<transition condition="=true">
+			<targetStepName>check whether to raise event</targetStepName>
+		</transition>
+	</deleteFileStep>
+
+	<noopStep name="check whether to raise event">
+		<transition condition="${existingAssetVersion == null}">
+			<targetStepName>raise asset ingested event</targetStepName>
+		</transition>
+		<transition condition="=true">
+			<targetStepName>update timeline calculated properties</targetStepName>
+		</transition>
+	</noopStep>
+
+	<raiseWorkflowEventStep
+		name="raise asset ingested event"
+		eventTypeExpression="AssetIngested"
+		continueOnException="true"
+		executionLabelExpression="Sending Asset Ingested event"
+		emailAddressesExpression="${emailAddresses}"
+		summaryExpression="Asset ${assetVersion.name} has been ingested successfully"
+	>
+		<transition condition="=true">
+			<targetStepName>update timeline calculated properties</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>raise ensure indexed event</targetStepName>
+		</transition>
+
+		<property name="ingestedFileName">${fileToIngest.name}</property>
+		<property name="ingestedFilePath">${fileToIngest.absolutePath}</property>
+	</raiseWorkflowEventStep>
+
+	<updateDataObjectCalculatedPropertiesStep name="update timeline calculated properties"
+											  dataObjectExpression="${timeline}">
+		<transition condition="=true">
+			<targetStepName>end</targetStepName>
+		</transition>
+	</updateDataObjectCalculatedPropertiesStep>
+
+	<testStep name="log unchanged asset" outputExpression="Asset file ${fileToIngest.name} has not been modified, skipping ingest."/>
+
+	<noopStep name="end">
+		<transition condition="${true}">
+			<targetStepName>raise ensure indexed event</targetStepName>
+		</transition>
+	</noopStep>
+
+	<raiseWorkflowEventStep name="raise ensure indexed event"
+	                        eventTypeExpression="ensureIndexed"
+	                        executionLabelExpression="Ensure Asset Indexed "
+			>
+		<property name="indexTargetRef">${timeline}</property>
+	</raiseWorkflowEventStep>
+
+
+	<contextDataDef name="thumbFailed" dataType="String"></contextDataDef>
+	<contextDataDef name="proxyFailed" dataType="String"></contextDataDef>
+	<contextDataDef dataType="Data Object" name="timelineVideo"></contextDataDef>
+	<contextDataDef name="skipMezzanineFlag" label="Use Source as Mezzanine" dataType="Boolean" userInput="true"/>
+	<contextDataDef name="allowDuplicateNamesFlag" dataType="Boolean" defaultDataExpression="${false}"/>
+	<contextDataDef dataType="File" name="fileToIngest" label="File" required="true" userInput="true"></contextDataDef>
+    <contextDataDef name="fileToIngestName" dataType="String"/>
+	<contextDataDef name="fileToIngestFullPath" dataType="String"></contextDataDef>
+	<contextDataDef dataType="File" name="thumbnailVideo"></contextDataDef>
+	<contextDataDef dataType="File" name="thumbnailFile"></contextDataDef>
+	<contextDataDef dataType="Directory" name="sourceCopyPath">
+		<description>
+Optional intermediary directory before transcode.  Use this path if the transcoder does not have direct
+access to the repository
+		</description>
+	</contextDataDef>
+	<contextDataDef dataType="Data Object" name="assetVersion"></contextDataDef>
+	<contextDataDef dataType="Data Object" name="existingAssetMaster"></contextDataDef>
+	<contextDataDef dataType="Data Object" name="existingAssetVersion"></contextDataDef>
+	<contextDataDef dataType="Data Object" name="existingAssetContent"></contextDataDef>
+	<contextDataDef dataType="Data Object" name="timeline"></contextDataDef>
+	<contextDataDef name="metadataRootPath" dataType="Directory"/>
+	<contextDataDef name="metadataPathProperties" dataType="String" multiple="true"/>
+    <contextDataDef name="metadata" dataType="NameValuePair" multiple="true"/>
+    <contextDataDef name="jsonMetadata" dataType="JSON" multiple="false"/>
+    <contextDataDef name="categoryName" dataType="String"/>
+	<contextDataDef dataType="String" name="mezzanineTemplate" defaultDataExpression="=#mezzanineTemplate(assetVersion)?.name"></contextDataDef>
+	<contextDataDef dataType="String" name="proxyTemplate" defaultDataExpression="=#proxyTemplate(assetVersion)?.name"></contextDataDef>
+	<contextDataDef dataType="String" name="thumbnailVideoTemplate" defaultDataExpression="=#thumbnailMovTemplate(assetVersion)?.name"></contextDataDef>
+	<contextDataDef name="emailAddresses" dataType="String" multiple="true"/>
+	<contextDataDef dataType="Data Object" name="thumbnailContent"></contextDataDef>
+	<contextDataDef name="assetFoundInPlace" dataType="String"></contextDataDef>
+	<contextDataDef name="newOrUpdate" dataType="String"></contextDataDef>
+	<!-- exif extraction flag -->
+	<contextDataDef name="exifExtraction" dataType="Boolean" defaultDataExpression="false"/>
+	<contextDataDef name="exifMetadata" dataType="NameValuePair" multiple="true"/>
+	<contextDataDef name="exifMetadataGroupName" label="Metadata Group" dataType="String" defaultDataExpression="EXIF Metadata"/>
+	<contextDataDef name="exifPrefix" dataType="String" defaultDataExpression="exif"/>
+	<contextDataDef name="exifResultsRawJSON" dataType="JSON"></contextDataDef>
+
+	<contextDataDef name="trackCreateDateRaw" dataType="String"></contextDataDef>
+	<contextDataDef name="trackCreateDateFixed" dataType="String"></contextDataDef>
+
+	<contextDataDef name="createDateRaw" dataType="String"></contextDataDef>
+	<contextDataDef name="createDateJSON" dataType="JSON"></contextDataDef>
+	<contextDataDef name="cleanCreationDate" dataType="Date"></contextDataDef>
+
+	<contextDataDef name="audioEncodeInfo" dataType="String"></contextDataDef>
+	<contextDataDef name="mediaInfoString" dataType="String"></contextDataDef>
+	<contextDataDef name="mediaInfoXML" dataType="XML"></contextDataDef>
+	<contextDataDef name="ffprobeString" dataType="String"></contextDataDef>
+	<contextDataDef name="ffprobeXML" dataType="XML"></contextDataDef>
+</workflow>
