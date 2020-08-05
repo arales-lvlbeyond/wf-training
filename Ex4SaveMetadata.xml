@@ -41,7 +41,9 @@
               executionLabelExpression="Saving metadata for ${assetName}"
               dataObjectExpression="${subject.metadata}"
               nextStep="end">
-        <property name="testValueA">${testValueA}</property>
+        <property name="testValueA">${testValueAlpha}</property>
+        <property name="testValueA1">${testValueA1}</property>
+        <property name="testSinglePicklist">${testSinglePicklistOptions}</property>
     </saveDataObjectStep>
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -53,6 +55,12 @@
 
     <contextDataDef name="asset" dataType="Data Object" defaultDataExpression="${subject}" />
     <contextDataDef name="assetName" dataType="String" defaultDataExpression="${asset.name}" />
+
+    <contextDataDef name="testValueAlpha" dataType="Integer" defaultDataExpression="555" />
+
+    <contextDataDef name="testValueA1" dataType="String" defaultDataExpression="Aha!" />
+
+    <contextDataDef name="testSinglePicklistOptions" dataType="String" defaultDataExpression="Item 3" />
     <!-- ......... PROCESSING ........... -->
 
 
