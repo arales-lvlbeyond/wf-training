@@ -79,12 +79,12 @@
 
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
-    <contextDataDef name="numberOfLoops" dataType="Integer" defaultDataExpression="${subject.items.size()}" />
-    <contextDataDef name="totalAssets" dataType="Integer" defaultDataExpression="${subject.items.size()}" />
-    <contextDataDef name="counter" dataType="Integer" defaultDataExpression="0" />
-    <contextDataDef name="currentFile" dataType="Data Object" defaultDataExpression="${subject.items[0].asset}"/>
-    <contextDataDef name="fileType" dataType="String" defaultDataExpression="${currentFile.assetType}" />
-    <contextDataDef name="metadataTestValueA" dataType="Integer" defaultDataExpression="${currentFile.metadata.testValueA}" />
+    <contextDataDef name="numberOfLoops"        dataType="Integer"      defaultDataExpression="${subject.items.size()}" />
+    <contextDataDef name="totalAssets"          dataType="Integer"      defaultDataExpression="${subject.items.size()}" />
+    <contextDataDef name="counter"              dataType="Integer"      defaultDataExpression="0" />
+    <contextDataDef name="currentFile"          dataType="Data Object"  defaultDataExpression="${subject.items[0].asset}"/>
+    <contextDataDef name="fileType"             dataType="String"       defaultDataExpression="${currentFile.assetType}" />
+    <contextDataDef name="metadataTestValueA"   dataType="Integer"      defaultDataExpression="${currentFile.metadata.testValueA}" />
 
     <!-- ......... PROCESSING ........... -->
 
