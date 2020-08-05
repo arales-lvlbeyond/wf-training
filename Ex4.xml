@@ -1,0 +1,75 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="Ex4_gw"
+          name="Ex4_gw"
+          executionLabelExpression="Ex4_gw | "
+          subjectDOClassName="AssetMaster"
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>save asset picklist</initialStepName>
+    <!-- update testMulitPicklist metadata field -->
+    <saveDataObjectStep name="save asset picklist"
+                        executionLabelExpression="Saving metadata on ${subject.name}"
+                        dataObjectExpression="${subject.metadata}"
+                        nextStep="save asset testValueA">
+        <property name="testMulitPicklist">${picklistOptionsToAdd}</property>
+    </saveDataObjectStep>
+    <!-- update testValueA metadata field -->
+    <saveDataObjectStep name="save asset testValueA"
+                        executionLabelExpression="Saving metadata on ${subject.name}"
+                        dataObjectExpression="${subject.metadata}"
+                        nextStep="save asset testValueA1">
+        <property name="testValueA">${int_testValueA}</property>
+    </saveDataObjectStep>
+    <!-- update testValueA1 metadata field -->
+    <saveDataObjectStep name="save asset testValueA1"
+                        executionLabelExpression="Saving metadata on ${subject.name}"
+                        dataObjectExpression="${subject.metadata}"
+                        nextStep="save asset singlePickList">
+        <property name="testValueA1">${str_testValueA1}</property>
+    </saveDataObjectStep>
+    <!-- update testSinglePicklist metadata field -->
+    <saveDataObjectStep name="save asset singlePickList"
+                        executionLabelExpression="Saving metadata on ${subject.name}"
+                        dataObjectExpression="${subject.metadata}"
+                        nextStep="end">
+        <property name="testSinglePicklist">${singleListOptionsToAdd}</property>
+    </saveDataObjectStep>
+
+
+    <!-- Data Defs for updating picklists and displaying PickList-Choices -->
+    <contextDataDef name="str_testValueA1"          dataType="String"        defaultDataExpression="weird..."/>
+    <contextDataDef name="int_testValueA"           dataType="Integer"       defaultDataExpression="12345"/>
+
+    <contextDataDef name="userChoices_multi"        dataType="String"        defaultDataExpression="${'Multi 1'}"/>
+    <contextDataDef name="newValues_multi"          dataType="String"        defaultDataExpression="Multi 2"/>
+    <contextDataDef name="picklistOptionsToAdd"     dataType="String"        defaultDataExpression="${ newValues_multi + '|' + #joinElements(userChoices_multi, '|') }" />
+
+    <contextDataDef name="userChoices_single"       dataType="String"        defaultDataExpression="${'Item 1'}"/>
+    <contextDataDef name="newValues_single"         dataType="String"        defaultDataExpression="Item 2"/>
+    <contextDataDef name="singleListOptionsToAdd"   dataType="String"        defaultDataExpression="${ newValues_single}" />
+
+    <!-- success -->
+    <noopStep name="end"/>
+
+</workflow>
