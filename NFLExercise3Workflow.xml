@@ -134,12 +134,16 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> minor edits
     <contextDataDef name="numberOfLoops"        dataType="Integer"      defaultDataExpression="${subject.items.size()}" />
     <contextDataDef name="totalAssets"          dataType="Integer"      defaultDataExpression="${subject.items.size()}" />
     <contextDataDef name="counter"              dataType="Integer"      defaultDataExpression="0" />
     <contextDataDef name="currentFile"          dataType="Data Object"  defaultDataExpression="${subject.items[0].asset}"/>
     <contextDataDef name="fileType"             dataType="String"       defaultDataExpression="${currentFile.assetType}" />
     <contextDataDef name="metadataTestValueA"   dataType="Integer"      defaultDataExpression="${currentFile.metadata.testValueA}" />
+<<<<<<< HEAD
 =======
     <contextDataDef name="numberOfLoops" dataType="Integer" />
 =======
@@ -162,6 +166,8 @@
 >>>>>>> looping working
     <contextDataDef name="metadataTestValueA" dataType="Integer" defaultDataExpression="${currentFile.metadata.testValueA}" />
 >>>>>>> continued updates,still issues with filetype
+=======
+>>>>>>> minor edits
 
     <!-- ......... PROCESSING ........... -->
 
