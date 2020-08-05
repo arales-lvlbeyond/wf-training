@@ -45,22 +45,24 @@
     />
 
     <setContextData name="set current asset"
-              targetDataDef="currentFile"
-              valueExpression="${subject.items[counter]}"
-              nextStep="begin loop"
+                    targetDataDef="currentFile"
+                    valueExpression="${subject.items[counter].asset}"
+                    nextStep="show asset info"
     />
 
-    <noopStep name="begin loop"
-              executionLabelExpression="Loop Interval: ${counter + 1} | Current File: ${currentFile} | Asset Type: ${fileType}"
+    <noopStep name="show asset info"
+              executionLabelExpression="Current File: ${currentFile} | Asset Type: ${fileType} | Loop Interval: ${counter + 1}"
               nextStep="counter increment"
     />
+
 
     <setContextData name="counter increment"
                     targetDataDef="counter"
                     valueExpression="${counter + 1}"
     >
-        <transition condition="${counter &lt; numberOfLoops}">
-            <targetStepName>begin loop</targetStepName>
+
+        <transition condition="${counter &lt; numberOfLoops }">
+            <targetStepName>set current asset</targetStepName>
         </transition>
         <transition condition="${true}">
             <targetStepName>looping finished</targetStepName>
@@ -77,11 +79,11 @@
 
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
-    <contextDataDef name="numberOfLoops" dataType="Integer" defaultDataExpression="${subject.items.size()" />
-    <contextDataDef name="totalAssets" dataType="Integer" defaultDataExpression="${subject.items.size()" />
+    <contextDataDef name="numberOfLoops" dataType="Integer" defaultDataExpression="${subject.items.size()}" />
+    <contextDataDef name="totalAssets" dataType="Integer" defaultDataExpression="${subject.items.size()}" />
     <contextDataDef name="counter" dataType="Integer" defaultDataExpression="0" />
-    <contextDataDef name="currentFile" dataType="Data Object" defaultDataExpression="${subject.items[counter].asset"/>
-    <contextDataDef name="fileType" dataType="String" defaultDataExpression="${currentFile.asset.assetType}" />
+    <contextDataDef name="currentFile" dataType="Data Object" defaultDataExpression="${subject.items[0].asset}"/>
+    <contextDataDef name="fileType" dataType="String" defaultDataExpression="${currentFile.assetType}" />
     <contextDataDef name="metadataTestValueA" dataType="Integer" defaultDataExpression="${currentFile.metadata.testValueA}" />
 
     <!-- ......... PROCESSING ........... -->
