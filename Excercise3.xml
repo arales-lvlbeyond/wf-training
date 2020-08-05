@@ -13,15 +13,26 @@
 
     <!-- begin loop to add items to array -->
     <noopStep name="loop interval"
-              devStep="true"
-              >
+              devStep="true">
         <transition condition="${counter &lt; subject.items.size()}">
-            <targetStepName>set meta field</targetStepName>
+            <targetStepName>set current asset and metadatafield</targetStepName>
         </transition>
         <transition condition="${true}">
             <targetStepName>looping finished</targetStepName>
         </transition>
     </noopStep>
+
+    <setContextData name="set current asset and metadatafield"
+                    nextStep="add to array"
+                    executionLabelExpression="${subject.items[counter].name}">
+        <set targetDataDef="selectedAsset"
+             valueExpression="${subject.items[counter].asset}">
+        </set>
+        <set targetDataDef="metadataFieldValue"
+             valueExpression="${subject.items[counter].asset.assetType + ' ' + subject.items[counter].asset.metadata.testValueA.toString()}">
+        </set>
+    </setContextData>
+    
     <!-- build out using meta fields -->
     <setContextData name="set meta field"
                     targetDataDef="metadataFieldValue"
@@ -32,12 +43,9 @@
                 nextStep="increment counter"
                 resultDataDef="outArray">
         <script>
-            if(outArray == null){
+            if(outArray == null)
                 outArray = []
-                outArray.add(metadataFieldValue)
-            }else{
-                outArray.add(metadataFieldValue)
-            }
+            outArray.add(metadataFieldValue)
             return outArray
         </script>
     </groovyStep>
@@ -54,7 +62,7 @@
     <noopStep name="end"/>
     <!-- variables -->
     <contextDataDef name="counter"              dataType="Integer"          defaultDataExpression="0"/>
-    <contextDataDef name="allItems"             dataType="Data Object"      defaultDataExpression="${subject.getItems()}" multiple="true"     />
+    <contextDataDef name="selectedAsset"        dataType="Data Object"      defaultDataExpression="${subject.items[0].asset}" multiple="true"     />
     <contextDataDef name="metadataFieldValue"   dataType="String"           defaultDataExpression="${subject.items[counter].asset.metadata?.testValueA.toString()}"/>
     <contextDataDef name="outArray"             dataType="String"           multiple="true"/>
 
