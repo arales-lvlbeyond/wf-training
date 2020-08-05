@@ -107,7 +107,15 @@
     <contextDataDef name="testValueA1" dataType="String" defaultDataExpression="Aha!" />
 
     <contextDataDef name="testSinglePicklistOptions" dataType="String" defaultDataExpression="Item 3" />
+<<<<<<< HEAD
 >>>>>>> single picklist metadata working
+=======
+
+    <contextDataDef name="currentMultiSelected" dataType="String" defaultDataExpression="${'Multi 2'}" />
+    <contextDataDef name="newMultiValue" dataType="String" defaultDataExpression="Multi 3" />
+    <contextDataDef name="picklistOptionsToAdd" dataType="String" defaultDataExpression="${ newMultiValue + '|' + #joinElements(currentMultiSelected, '|') }" />
+
+>>>>>>> multi picklist returning null for second value (currentMultiSelected)
     <!-- ......... PROCESSING ........... -->
 
 
