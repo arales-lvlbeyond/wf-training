@@ -1,0 +1,63 @@
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="Exercise3_gw"
+          name="Exercise3_gw"
+          executionLabelExpression="Exercise3_GW | "
+          subjectDOClassName="AssetCollection"
+          showInUserInterface="true"
+          sdkVersion="">
+
+    <initialStepName>loop interval</initialStepName>
+
+    <!-- begin loop to add items to array -->
+    <noopStep name="loop interval"
+              devStep="true"
+              >
+        <transition condition="${counter &lt; subject.items.size()}">
+            <targetStepName>set meta field</targetStepName>
+        </transition>
+        <transition condition="${true}">
+            <targetStepName>looping finished</targetStepName>
+        </transition>
+    </noopStep>
+    <!-- build out using meta fields -->
+    <setContextData name="set meta field"
+                    targetDataDef="metadataFieldValue"
+                    valueExpression="${subject.items[counter].asset.assetType + ' ' + subject.items[counter].asset.metadata.testValueA.toString()}"
+                    nextStep="add to array"/>
+    <!-- add the item to outArray -->
+    <groovyStep name="add to array"
+                nextStep="increment counter"
+                resultDataDef="outArray">
+        <script>
+            if(outArray == null){
+                outArray = []
+                outArray.add(metadataFieldValue)
+            }else{
+                outArray.add(metadataFieldValue)
+            }
+            return outArray
+        </script>
+    </groovyStep>
+    <!-- increment the loop counter -->
+    <setContextData name="increment counter"
+                    targetDataDef="counter"
+                    valueExpression="${counter + 1}"
+                    nextStep="loop interval"
+                    devStep="true">
+    </setContextData>
+    <!-- finished -->
+    <noopStep name="looping finished" nextStep="end" />
+    <!-- end -->
+    <noopStep name="end"/>
+    <!-- variables -->
+    <contextDataDef name="counter"              dataType="Integer"          defaultDataExpression="0"/>
+    <contextDataDef name="allItems"             dataType="Data Object"      defaultDataExpression="${subject.getItems()}" multiple="true"     />
+    <contextDataDef name="metadataFieldValue"   dataType="String"           defaultDataExpression="${subject.items[counter].asset.metadata?.testValueA.toString()}"/>
+    <contextDataDef name="outArray"             dataType="String"           multiple="true"/>
+
+
+
+</workflow>
