@@ -30,6 +30,7 @@
 
     <noopStep name="find collection name"
 <<<<<<< HEAD
+<<<<<<< HEAD
               executionLabelExpression="Selected Collection: ${subject.name} | number of assets: ${totalAssets}"
               nextStep="find number of times to loop"
     />
@@ -66,13 +67,21 @@
             <targetStepName>set current asset</targetStepName>
 =======
               executionLabelExpression="Selected Collection: ${subject.name}"
+=======
+              executionLabelExpression="Selected Collection: ${subject.name} | number of assets: ${totalAssets}"
+>>>>>>> looping working, but asset type not updating
               nextStep="find number of times to loop"
     />
 
-    <noopStep name="find number of times to loop"
-              executionLabelExpression="number of times to loop: ${numberOfLoops}"
-              nextStep="begin loop"
+    <setContextData name="find number of times to loop"
+              targetDataDef="numberOfLoops"
+              valueExpression="${subject.items.size()}"
+              nextStep="display number of loops to perform"
     />
+
+    <noopStep name="display number of loops to perform"
+              executionLabelExpression="Looping ${numberOfLoops} times"
+              nextStep="begin loop" />
 
     <noopStep name="begin loop"
               executionLabelExpression="Loop Interval: ${counter + 1} | Asset Type: ${fileType}"
@@ -103,6 +112,7 @@
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
 <<<<<<< HEAD
+<<<<<<< HEAD
     <contextDataDef name="numberOfLoops"        dataType="Integer"      defaultDataExpression="${subject.items.size()}" />
     <contextDataDef name="totalAssets"          dataType="Integer"      defaultDataExpression="${subject.items.size()}" />
     <contextDataDef name="counter"              dataType="Integer"      defaultDataExpression="0" />
@@ -111,6 +121,10 @@
     <contextDataDef name="metadataTestValueA"   dataType="Integer"      defaultDataExpression="${currentFile.metadata.testValueA}" />
 =======
     <contextDataDef name="numberOfLoops" dataType="Integer" />
+=======
+    <contextDataDef name="numberOfLoops" dataType="Integer" defaultDataExpression="${subject.items.size()" />
+    <contextDataDef name="totalAssets" dataType="Integer" defaultDataExpression="${subject.items.size()" />
+>>>>>>> looping working, but asset type not updating
     <contextDataDef name="counter" dataType="Integer" defaultDataExpression="0" />
     <contextDataDef name="fileType" dataType="String" defaultDataExpression="${subject.items[0].asset.assetType}" />
 >>>>>>> initial setup of looping workflow - looping not working yet
