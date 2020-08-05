@@ -1,0 +1,1089 @@
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://levelsbeyond.com/schema/workflow"
+    xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+    xsi:schemaLocation="http://levelsbeyond.com/schema/workflow http://www.levelsbeyond.com/schema/latest/studio.xsd"
+    id="processPictureDPXDirectoryIngest"
+    name="Process Picture Directory Ingest"
+    description="Sub Workflow to deal with the process of ingesting of Pictures in the format XXX_Picture"
+    executionLabelExpression="Process Picture Directory Ingest | Directory: ${directoryToIngest.name} | Execution: ${#this.id}"
+    deadlineExpression=""
+    subjectDOClassName=""
+    showInUserInterface="false"
+    sdkVersion="">
+
+	<initialStepName>check if current asset is processing</initialStepName>
+	
+	
+	
+	<!-- ................................................ Safety Check .................................................... -->
+	<!-- make sure an ingest for this directory is not already processing -->
+	<queryStep name="check if current asset is processing"
+		targetDataObjectClass="WorkflowExecution"
+		resultDataDef="currentExecutions"
+		executionLabelExpression="Check to see if this workflow is already currently executing for this directory (${directoryToIngest.name})"
+		pctComplete="0"
+		>
+		<transition condition="${currentExecutions.size() == 0}">
+			<targetStepName>get start time</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>already executing</targetStepName>
+		</transition>
+		
+		<criteria>
+			<![CDATA[
+				<criteria>
+					<and>
+						<condition property="workflowVersion.workflow.key" op="eq">
+							<test value="${ #this.workflow.workflowVersion.workflow.key }" />
+						</condition>
+						<condition property="executionLabel" op="like">
+							<test value="%${directoryToIngest.name}%" />
+						</condition>
+						<condition property="uuid" op="noteq">
+							<test value="${ #this.workflow.uuid }" />
+						</condition>
+						<condition property="status" op="in">
+							<tests>
+								<test value="CREATED" />
+								<test value="QUEUED" />
+								<test value="EXECUTING" />
+							</tests>
+						</condition>
+					</and>
+				</criteria>
+			]]>
+		</criteria>	
+	</queryStep>
+	
+
+
+
+
+
+	<!-- ............................................... Initial Steps .................................................... -->
+	<!-- get start time in miliseconds -->
+	<groovyStep name="get start time"
+		executionLabelExpression="getting start time for this ingest process >>> ${startTime != null? startTime : 'Calculating'}"
+		resultDataDef="startTime"
+		pctComplete="1"
+		nextStep="directory name is valid"
+		>
+		<script>
+			<![CDATA[
+				return System.currentTimeMillis()
+			]]>
+		</script>
+	</groovyStep>
+	
+	
+	
+	<!-- validate the directory name is good, since we use it for data -->
+	<noopStep name="directory name is valid"
+		pctCompleteExpression="4"
+		executionLabelExpression="checking directory name ${directoryToIngest.name}  matches XXX_picture >>> ${directoryToIngest.name.matches(regEx)}"
+		>
+		<transition condition="${directoryToIngest.name.matches(regEx)}">
+			<targetStepName>check ingest files</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>end</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	
+	<!-- are there files to ingest? -->
+	<noopStep name="check ingest files"
+		pctCompleteExpression="6"
+		executionLabelExpression="are there files to ingest? >>> ${filesToIngest.size() &gt; 0? 'true | number of files = ' + filesToIngest.size() : 'false'}"
+		>
+		<transition condition="${filesToIngest.size() &gt; 0}">
+			<targetStepName>check for bad extension</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>no files to ingest</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	
+	<!-- Check to see if there are any files with bad extensions -->
+	<groovyStep name="check for bad extension"
+		executionLabelExpression="Looking only for files with extensions ${inclusionList} | ${badFileList != null ? 'Found ' + badFileList.size() + ' files': 'Calculating' }"
+		resultDataDef="badFileList"
+		pctComplete="8"
+		>
+		<transition condition="${badFileList.size() &gt; 0}">
+			<targetStepName>log invalid file included</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>check if extensions have aspx</targetStepName>
+		</transition>
+		<script>
+			<![CDATA[
+				def badFileList = new ArrayList()
+			
+                for(fileName in filesToIngest)
+                {
+                	def ext = fileName.split("\\.").last()
+                	
+                    if(!inclusionList.contains(ext))
+                    {
+                    	badFileList.add(fileName)
+                    }
+                }
+  
+
+                return badFileList
+                
+            ]]>
+		</script>
+	</groovyStep>
+
+	<!-- Check to see if there are any files with bad extensions -->
+	<groovyStep name="check if extensions have aspx"
+		executionLabelExpression="Looking only for aspx  | ${hasASPX}"
+		resultDataDef="hasASPX"
+		pctComplete="8"
+		>
+		<transition condition="${hasASPX != true}">
+			<targetStepName>check for json file</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>aspx found</targetStepName>
+		</transition>
+		<script>
+			<![CDATA[
+			
+       			for(fileName in filesToIngest)
+                {
+                	def ext = fileName.split("\\.").last()
+                	// println ext
+                    if("aspx" == ext)
+                    {
+                    	hasASPX = true;
+                    }
+                }
+                // println hasASPX
+                return hasASPX
+                
+            ]]>
+		</script>
+	</groovyStep>
+	
+	
+	
+	<!-- check for a json file. If it exists, use it instead of looking for an XML -->
+	<noopStep name="check for json file"
+		pctCompleteExpression="9"
+		executionLabelExpression="does ${jsonMetadataFile.absolutePath} exist? >>> ${jsonMetadataFile.exists()}"
+		>
+		<transition condition="${jsonMetadataFile.exists()}">
+			<targetStepName>check for sha1 file</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>check for xml file</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	
+	<!-- validate the xml files was found -->
+	<noopStep name="check for xml file"
+		pctCompleteExpression="10"
+		executionLabelExpression="does ${metadataFile.absolutePath} exist? >>> ${metadataFile.exists()}"
+		>
+		<transition condition="${metadataFile.exists()}">
+			<targetStepName>check for sha1 file</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>xml file error</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	<!-- email before failing the workflow due to no xml sidecar -->
+	<emailStep name="xml file error"
+		emailAddressesExpression="${emailAddress}"
+		subjectExpression="XML Error: ${directoryToIngest.name}"
+		nextStep="failed xml"
+		>
+		<body>
+			Error: XML file not found
+			
+			Directory: ${directoryToIngest.absolutePath}
+			XML File: ${metadataFile.absolutePath}
+		</body>
+	</emailStep>
+	
+	
+	
+	<!-- verify the sha1 file was found -->
+	<noopStep name="check for sha1 file"
+		pctCompleteExpression="12"
+		executionLabelExpression="does ${sha1File.absolutePath} exist? >>> ${sha1File.exists()}"
+		>
+		<transition condition="${sha1File.exists()}">
+			<targetStepName>build collection name</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>sha1 file error</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	
+	<!-- email that the sha1 file was not found before failing the workflow -->
+	<emailStep name="sha1 file error"
+		emailAddressesExpression="${emailAddress}"
+		subjectExpression="SHA1 Error: ${directoryToIngest.name}"
+		nextStep="failed sha1"
+		>
+		<body>
+			Error: SHA1 file not found
+			
+			Directory: ${directoryToIngest.absolutePath}
+			SHA1 File: ${sha1File.absolutePath}
+		</body>
+	</emailStep>
+
+
+
+	<!-- collection name based on directory and asset type-->
+	<groovyStep name="build collection name"
+		pctCompleteExpression="15"
+		executionLabelExpression="Building Collection Name: ${collectionName != null? collectionName : 'Calculating'}"
+		resultDataDef="collectionName"
+		>
+		<transition condition="${jsonMetadataFile.exists()}">
+			<targetStepName>parse json metadata</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>parse xml metadata</targetStepName>
+		</transition>
+
+		<script>
+			<![CDATA[
+                import java.util.Arrays;
+                def dirNameArray = (directoryToIngest.name).split("_");
+                def dirNameArrayMinusLast = Arrays.copyOf(dirNameArray, dirNameArray.length-1);
+				return dirNameArrayMinusLast.join("_") + '_' + contentType
+            ]]>
+		</script>
+	</groovyStep>
+	<!-- ...................................... End Initial Steps ............................................ -->
+	
+	
+
+
+
+
+	<!-- .......................................... Metadata Steps ........................................... -->
+	<groovyStep name="parse json metadata"
+		resultDataDef="fullMetadataJson"
+		executionLabelExpression="extracting metadata json from ${jsonMetadataFile.absolutePath}"
+		pctComplete="17"
+		nextStep="parse metadata log"
+		>
+		<script>
+			<![CDATA[
+				import groovy.json.*;
+				
+				String fileContents = jsonMetadataFile.getFile().text;
+				
+				return new JsonSlurper().parseText(fileContents);
+			]]>
+		</script>
+	</groovyStep>
+	
+	
+	
+	<!-- parse the sidecar xml for metadata and map the extracted data from a formatted csv -->
+	<executeSubflowStep name="parse xml metadata"
+		targetWorkflowId="uscIngestParseXMLMetadata"
+		resultDataDef="fullMetadataJson"
+		nextStep="parse metadata log"
+		executionLabelExpression="parsing ${metadataFile.name}"
+		waitForCompletionExpression="true"
+		pctComplete="17"
+		>
+		<subflowContextDataMapping parentDataDef="metadataFile" subflowDataDef="metadataFile"/>
+	</executeSubflowStep>
+
+
+	<!-- log the extracted data -->
+	<testStep name="parse metadata log"
+		outputExpression="PARSE METADATA JSON >>> ${fullMetadataJson.toString()}"
+		executionLabelExpression="combined metadata JSON to RE Log"
+		devStep="true"
+		nextStep="deconstruct collections json"
+		pctComplete="18"
+		/>
+	
+	
+	
+	<!-- get nested collection data -->
+	<setContextData name="deconstruct collections json"
+		targetDataDef="CollectionsJSON" 
+		valueExpression="${fullMetadataJson.collection}"
+		executionLabelExpression="Deconstructing json collection's metadata"
+		devStep="true"
+		nextStep="set ingest metadata values collection"
+		pctComplete="19"
+		/>
+
+	<!-- add static metadata values to the collection data -->
+	<groovyStep name="set ingest metadata values collection"
+		resultDataDef="CollectionsJSON"
+		executionLabelExpression="Adding in metadata properties for ingest tracking"
+		devStep="true"
+		nextStep="log reach collection metadata json"
+		pctComplete="20"
+		>
+		<script>
+			<![CDATA[
+                import com.fasterxml.jackson.databind.node.*;
+                def timeStamp = new Date();
+                CollectionsJSON.put("startIngestWBEpoch", startTime);
+                CollectionsJSON.put("archiveStatus", "Start Ingest at WB");
+                
+                return CollectionsJSON;
+            ]]>
+		</script>
+	</groovyStep>
+	
+	
+	
+	<!-- log collection data -->
+	<testStep name="log reach collection metadata json"
+		outputExpression="**********COLLECTION JSON********** >>> ${CollectionsJSON.toString()}"
+		executionLabelExpression="collection metadata JSON to RE Log"
+		devStep="true"
+		nextStep="deconstruct assets json"
+		pctComplete="21"
+		/>
+	
+	
+	
+	<!-- get nested asset data -->
+	<setContextData name="deconstruct assets json"
+		targetDataDef="AssetsJSON" 
+		valueExpression="${fullMetadataJson.asset}"
+		executionLabelExpression="Deconstructing json asset's metadata"
+		devStep="true"
+		nextStep="log reach asset metadata json"
+		pctComplete="22"
+		/>
+	
+	
+	
+	<!-- log asset data -->
+	<testStep name="log reach asset metadata json"
+		outputExpression="**********ASSET JSON********** >>> ${AssetsJSON.toString()}"
+		executionLabelExpression="asset metadata JSON to RE Log"
+		devStep="true"
+		nextStep="check for existing collection"
+		pctComplete="23"
+		/>
+	
+	
+	
+	<!-- Check if the collection exists and if not create it.  If so then we will use the created collection -->
+	<queryStep name="check for existing collection"
+		targetDataObjectClass="AssetCollection"
+		resultDataDef="collection"
+		executionLabelExpression="Finding Collection: ${collectionName}"
+		pctComplete="24"
+		>
+		<transition condition="${collection == null}">
+			<targetStepName>create collection</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>update collection metadata</targetStepName>
+		</transition>
+		<criteria>
+			<![CDATA[
+                <criteria>
+                    <and>
+                        <condition property="name" op="eq">
+                            <test value="${collectionName}"/>
+                        </condition>
+                    </and>
+                </criteria>
+            ]]>
+		</criteria>
+	</queryStep>
+	
+	
+	
+	<!-- create the collection if it was not found -->
+	<saveDataObjectStep name="create collection"
+		targetDataObjectClass="AssetCollection"
+		resultDataDef="collection"
+		executionLabelExpression="Creating collection: ${collectionName}"
+		nextStep="Add contentType to metadata"
+		pctComplete="25"
+		>
+		<property name="Name">${ collectionName }</property>
+	</saveDataObjectStep>
+
+	<setContextData name="Add contentType to metadata"
+		targetDataDef="CollectionsJSON"
+		valueExpression="${CollectionsJSON.put('contentType', contentType)}"
+		devStep="true"
+		nextStep="Add typeAsset to metadata"/>
+
+	<setContextData name="Add typeAsset to metadata"
+		targetDataDef="CollectionsJSON"
+		valueExpression="${CollectionsJSON.put('typeAsset', contentType)}"
+		devStep="true"
+		nextStep="update collection metadata"/>
+
+	<!-- save collection metadata on the collection -->
+	<saveDataObjectStep name="update collection metadata"
+		executionLabelExpression="Update metadata on ${collection.name}"
+		dataObjectExpression="${collection.metadata}"
+		jsonValuesDataDef="CollectionsJSON"
+		nextStep="check if framerate exists"
+		pctComplete="26"
+		/>
+	<!-- ........................................ End Metadata Steps ......................................... -->
+	
+	
+	
+	<groovyStep name="check if framerate exists"
+		executionLabelExpression="check if framerate exists | ${framerate}"
+		continueOnException="false"
+		resultDataDef="framerate"
+		devStep="true"
+		pctComplete="28"
+		>
+		<transition condition="${framerate == null}">
+			<targetStepName>email framerate error</targetStepName> 
+		</transition>
+		<transition condition="true">
+			<targetStepName>check if picFrameType exists</targetStepName>
+		</transition>
+		
+		<script>
+			<![CDATA[
+            
+	            import groovy.json.*
+	            import org.slf4j.Logger
+				import org.slf4j.LoggerFactory
+				import com.routeto1.expression.function.GetPicklistLabelFunction
+				
+				Logger log = LoggerFactory.getLogger("com.levelsbeyond.plugin.workflow.execution.processor.ExecuteSubflowStepExecutionProcessor")
+	            
+	            try
+	            {
+	            	
+	            	//println collectionName
+	           		def framerateString = AssetsJSON?.get("motionPictureFrameratePickList")
+	
+
+	            	
+	            	if (framerateString.getClass() == com.fasterxml.jackson.databind.node.ArrayNode) {
+	   		
+	            		framerateString = GetPicklistLabelFunction.evaluate("motionPictureFrameratePickList", framerateString.get(0)?.textValue())
+	            		
+	            	} else {
+	            		framerateString = framerateString.asText()
+	            	}
+	        
+	            	// if no framerate exists, throw error
+	            	if (framerateString == null || framerateString == "")
+	            		{throw new Exception("motionPictureFrameratePickList was not supplied in the metadata file")}
+	            	
+
+		            if (framerateString.contains(".")) 
+		            {
+		                // its a double
+		                framerate = (int) Math.ceil(Double.parseDouble(framerateString))
+		                return framerate
+		            }
+		            else 
+		            {	
+		                // its an int 
+		                framerate = Integer.parseInt(framerateString)
+		                return framerate
+		            }
+	            }
+	            catch (Exception e)
+	            {
+	            	log.error("Error getting frame rate. Error thrown: ${e}")
+	            	return null
+	            }
+	     
+	          
+            ]]>
+		</script>
+	</groovyStep>
+
+
+	<groovyStep name="check if picFrameType exists"
+		executionLabelExpression="check if picFrameType exists | ${picFrameType}"
+		continueOnException="false"
+		resultDataDef="picFrameType"
+		devStep="true"
+		pctComplete="28"
+		>
+		<transition condition="${picFrameType == null}">
+			<targetStepName>email picFrameType error</targetStepName> 
+		</transition>
+		<transition condition="true">
+			<targetStepName>figure out frame groupings</targetStepName>
+		</transition>
+		
+		<script>
+			<![CDATA[
+            
+	            import groovy.json.*
+	            import org.slf4j.Logger
+				import org.slf4j.LoggerFactory
+				import com.routeto1.expression.function.GetPicklistLabelFunction
+				
+				Logger log = LoggerFactory.getLogger("com.levelsbeyond.plugin.workflow.execution.processor.ExecuteSubflowStepExecutionProcessor")
+	            
+
+
+				def picFrameType = null
+	            try
+	            {		
+	            		
+	            		picFrameType = AssetsJSON?.get("picFrameType")
+	            		picFrameType = GetPicklistLabelFunction.evaluate("picFrameType", picFrameType.get(0)?.textValue())
+	            		
+	            		if (picFrameType){
+	            			return picFrameType;
+	            		}
+	            		
+	            		return  AssetsJSON?.get("picFrameType")?.textValue()
+
+	            }
+	            catch (Exception e)
+	            {
+	            	log.error("Error getting picture frame type. Error thrown: ${e}")
+	            	return null
+	            }
+	     
+	          
+            ]]>
+		</script>
+	</groovyStep>
+	
+	
+	
+	<!-- .......................................... Chunk DPX Files .......................................... -->
+	<!-- 
+		group the dpx files into 1 minute groups.
+		based on framerate gathered from the 'motionPictureFramerate' key in the assetJSON 
+		
+		each grouping is a json, an array of groupings is returned.
+		Each grouping:
+		{
+			"counter":"<group number>",
+			"execServer":"<exec server number to use>",
+			"startingFrame":"<starting number of the group>",
+			"endingFrame":"<ending number of the group>"
+		}
+	-->
+	<groovyStep name="figure out frame groupings"
+		executionLabelExpression="number of groups = ${dpxGroupingJsonArray != null? dpxGroupingJsonArray.size() : 'Calculating'} | frames per group = 1 minute of frames | 1 minute of frames = frame rate * 60 | frame rate = ${AssetsJSON.motionPictureFramerate != null? AssetsJSON.motionPictureFrameratePickList : 'null'} | Check RE Log for errors thrown"
+		continueOnException="true"
+		resultDataDef="dpxGroupingJsonArray"
+		devStep="true"
+		pctComplete="28"
+		>
+		<transition condition="${dpxGroupingJsonArray != null AND dpxGroupingJsonArray.size() > 0}">
+			<targetStepName>get line count from sha1</targetStepName> 
+		</transition>
+		<transition condition="true">
+			<targetStepName>frame groupings failed</targetStepName>
+		</transition>
+		
+		<script>
+			<![CDATA[
+            
+	            import groovy.json.*
+	            import org.slf4j.Logger
+				import org.slf4j.LoggerFactory
+				import com.routeto1.expression.function.GetPicklistLabelFunction
+				
+				Logger log = LoggerFactory.getLogger("com.levelsbeyond.plugin.workflow.execution.processor.ExecuteSubflowStepExecutionProcessor")
+
+
+	            // ....... Calculate 1 minute of frames .......
+	            def oneMinuteOfFrames = 0
+	            //println "STart"
+	            //println framerate
+	            try
+	            {
+	            	oneMinuteOfFrames = framerate * 60
+	            }
+	            catch (Exception e)
+	            {
+	            	log.error("@@@@ Error calculating frame groupings. Error thrown: ${e}")
+	            	return null
+	            }
+	            // .......... End Frame Calculations ..........
+	            
+	            
+	            
+	            // ........... Grabbing Edge Frames ...........
+	            def startingFrame = null
+	           	def endingFrame = null
+	           	def frameTypeString = picFrameType
+	            try
+	            {
+	                  
+	            	for (fileName in filesToIngest)
+	            	{
+	            		// get frame type from xml
+	            		
+
+	            		if(fileName.endsWith("."+frameTypeString))
+	            		{
+		            		// get frame number from current file
+		            		def fileNameParts = fileName.split('\\.')
+		            		int currentFrame = fileNameParts[fileNameParts.size()-2].toInteger()
+		            		
+		            	
+		            		// set starting frame
+		            		if (startingFrame == null)
+		            		{
+		            			// first value
+		            			startingFrame = currentFrame
+		            		}
+		            		else if (currentFrame < startingFrame)
+		            		{
+		            			// new lowest value
+		            			startingFrame = currentFrame
+		            		}
+		            		
+		            		// set ending frame
+		            		if (endingFrame == null)
+		            		{
+		            			// first value
+		            			endingFrame = currentFrame
+		            		}
+		            		else if (currentFrame > endingFrame)
+		            		{
+		            			// new highest value
+		            			endingFrame = currentFrame
+		            		}
+		            	}
+	            	}
+	            }
+	            catch (Exception e)
+	            {
+	            	log.error("@@@@ Error Grabbing Edge Frames. Error thrown: ${e}")
+	            	return null
+	            }
+	            // ......... End Grabbing Edge Frames .........
+	           	
+	            
+	            
+	            
+	            // .......... Create Frame Groupings ..........
+	            def totalFiles = filesToIngest.size()
+	           	def groupingArray = new ArrayList()
+	           	def counter = 1
+	           	def execNumber = 1
+	           	def currentGroupEnd = 0
+	           	def currentGroupStart = startingFrame
+	
+	           	try
+	           	{
+		           	while(currentGroupEnd < endingFrame)
+		           	{
+		           		// set new end to the next minute of frames
+		           		currentGroupEnd = currentGroupStart + oneMinuteOfFrames - 1
+		           		
+		           		// don't go over the endingFrame number
+		           		if (currentGroupEnd > endingFrame)
+		           			{currentGroupEnd = endingFrame}
+		           		
+		           		// ..... create dpx grouping .....
+		           		def dpxGroupJson = new JsonSlurper().parseText("{}")
+		           		
+		           		// group number
+		           		dpxGroupJson.put("counter", counter)
+		           		// start from
+		           		dpxGroupJson.put("startingFrame", currentGroupStart)
+		           		// end at
+		           		dpxGroupJson.put("endingFrame", currentGroupEnd)
+		           		//
+		           		dpxGroupJson.put("frameType", frameTypeString)
+		           		//
+		           		dpxGroupJson.put("execServer", execNumber)
+		           		// ... end create dpx grouping ...
+		           		
+		           		// add the group json into the array
+		           		groupingArray.add(dpxGroupJson)
+		           		
+		           		// bump the counter
+		           		counter++
+		           		execNumber++
+		           		
+		           		if(execNumber > numberOfExecServers)
+		           			{execNumber = 1}
+		           			
+		           		// set start to the last loop's end
+		           		currentGroupStart = currentGroupEnd + 1
+		           	}
+		        }
+	           	catch (Exception e)
+	            {
+	            	log.error("@@@@ Error Create Frame Groupings. Error thrown: ${e}")
+	            	return null
+	            }
+	            // ........ End Create Frame Groupings ........
+	    
+	            
+	            
+	            log.info("dpx grouping array >>> ${groupingArray.toString()}")
+	            
+	            return groupingArray
+            
+            ]]>
+		</script>
+	</groovyStep>
+	<!-- ........................................ End Chunk DPX Files ........................................ -->
+	
+	
+	<!-- Get line count from sha1 -->
+    <runCommandStep name="get line count from sha1"
+        executablePathExpression="/usr/bin/wc"
+        executionLabelExpression="Getting line count"
+        stdoutDataDef="wcOutput"
+        nextStep="parse command output"
+        >
+      	<arg>-l</arg>
+     	<arg>${sha1File.absolutePath}</arg>
+    </runCommandStep>
+	
+	<!-- get nested asset data -->
+	<setContextData name="parse command output"
+		targetDataDef="sha1FileCount" 
+		valueExpression="${wcOutput.split(' ')[0]}"
+		executionLabelExpression="SHA1 file ${picFrameType} count (excluding XML): ${sha1FileCount-1}. File count (excluding XML and SHA1): ${filesToIngest.size()}"
+		devStep="false"
+		>
+		<transition condition="${sha1FileCount -1 == filesToIngest.size()}">
+			<targetStepName>verify sha1s</targetStepName> 
+		</transition>
+		<transition condition="true">
+			<targetStepName>count missmatch</targetStepName>
+		</transition>	
+	</setContextData>
+
+	<!-- filesToIngest.size() == -->
+	<!-- ....................................... Start Sha1 Validation ....................................... -->
+	<!-- validate sha1s in their groupings using exec-servers and a groovy script installed on the exec-server -->
+	<executeSubflowStep name="verify sha1s"
+		executionLabelExpression="verifying sha1's in chunks"
+		targetWorkflowId="dpxFrameSha1Subflow"
+		subjectChangePath="${dpxGroupingJsonArray}"
+		subflowTargetDataDef="groupingJson"
+		waitForCompletionExpression="true"
+		nextStep="tar dpx files"
+		pctComplete="50"
+		>
+		<subflowContextDataMapping parentDataDef="sha1File" 			subflowDataDef="sha1File"/>
+		<subflowContextDataMapping parentDataDef="directoryToIngest" 	subflowDataDef="directory"/>
+	</executeSubflowStep>
+	<!-- ........................................ End Sha1 Validation ........................................ -->
+	
+	
+	
+	
+	
+
+	<!-- ....................................... Start Tar And Ingest ........................................ -->
+	<!-- create tars for each of the dpx groupings using exec-servers and a groovy script installed on the exec-server -->
+	<executeSubflowStep name="tar dpx files"
+		executionLabelExpression="Creating ${dpxGroupingJsonArray.size()} tars"
+		targetWorkflowId="processPictureDPXTar"
+		subjectChangePath="${dpxGroupingJsonArray}"
+		subflowTargetDataDef="groupingJson"
+		resultDataDef="tarFilesToIngest"
+		waitForCompletionExpression="true"
+		nextStep="ingest tars"
+		pctComplete="75"
+		>
+		<subflowContextDataMapping parentDataDef="directoryToIngest" 	subflowDataDef="directory"/>
+	</executeSubflowStep>    
+	
+	
+	
+	<!-- ingest tars returned from processPictureDPXTar -->
+	<executeSubflowStep name="ingest tars"
+		executionLabelExpression="Ingesting ${tarFilesToIngest.size()} tars"
+		targetWorkflowId="wbBaseIngestAsset"
+		subjectChangePath="${tarFilesToIngest}"
+		subflowTargetDataDef="fileToIngest"
+		waitForCompletionExpression="true"
+		nextStep="get end time"
+		pctComplete="88"
+		>
+		<subflowContextDataMapping parentDataDef="collection" 		subflowDataDef="collection"/>
+		<subflowContextDataMapping parentDataDef="AssetsJSON" 		subflowDataDef="assetMetadata"/>
+		<subflowContextDataMapping parentDataDef="startTime" 		subflowDataDef="startTime"/>
+		<subflowContextDataMapping parentDataDef="contentType" 		subflowDataDef="contentType"/>
+	</executeSubflowStep>
+	
+	
+	
+	<!-- get end time in miliseconds -->
+	<groovyStep name="get end time"
+		executionLabelExpression="getting end time for this ingest process >>> ${endTime != null? endTime : 'Calculating'}"
+		resultDataDef="endTime"
+		pctComplete="89"
+		nextStep="set end ingest metadata"
+		>
+		<script>
+			<![CDATA[
+				return System.currentTimeMillis()
+			]]>
+		</script>
+	</groovyStep>
+	
+	
+	
+	<!-- save after ingest metadata -->
+	<saveDataObjectStep name="set end ingest metadata"
+		pctCompleteExpression="90"
+		dataObjectExpression="${collection.metadata}"
+		nextStep="delete ingest directory" 
+		>
+		<property name="endIngestWBEpoch">${endTime}</property>
+		<property name="ingestDuration">${endTime - startTime}</property>
+		<property name="archiveStatus">End Ingest at WB</property>
+	</saveDataObjectStep>
+	
+	
+	
+	<!-- cleanup original directory -->
+	<deleteFileStep name="delete ingest directory"
+		sourceFilesExpression="${directoryToIngest}"
+		executionLabelExpression="deleting ${directoryToIngest.absolutePath}"
+		pctComplete="99"
+		nextStep="end"
+		/>
+	<!-- ....................................... End Tar And Ingest .......................................... -->
+	
+
+
+
+
+
+	<!-- ............................................. End Steps.............................................. -->
+	<!-- landing point if this process is already running -->
+	<noopStep name="already executing"
+		pctComplete="99"
+		nextStep="end"
+		/>
+	
+	
+	
+	<!-- Processing is skipped when there are tar files in the directory -->
+	<noopStep name="skip processing"
+		executionLabelExpression="this directory has tar files"
+		pctComplete="99"
+		nextStep="end"
+		/>
+
+
+
+	<!-- nothing to ingest -->
+	<noopStep name="no files to ingest"
+		executionLabelExpression="this directory has no files to ingest."
+		pctComplete="99"
+		nextStep="end"
+		/>
+	
+
+	
+	<!-- success -->
+	<noopStep name="end" pctCompleteExpression="100"/>
+	
+	
+	
+	<!-- failed to extract the xml or sha1 from the directory -->
+	<failWorkflowStep name="failed xml"
+		reasonExpression="XML File was not found >>> ${metadataFile.absolutePath}"
+		executionLabelExpression="XML File was not found >>> ${metadataFile.absolutePath}"
+		/>
+	
+	
+	
+	<!-- failed to extract the sha1 from the directory -->
+	<failWorkflowStep name="failed sha1"
+		reasonExpression="Sha1 was not found >>> ${sha1File.absolutePath}"
+		executionLabelExpression="Sha1 was not found >>> ${sha1File.absolutePath}"
+		/>
+	
+	
+	
+	<!-- frame groupings were unable to be created -->
+	<failWorkflowStep name="frame groupings failed"
+		reasonExpression="frame groupings failed"
+		executionLabelExpression="frame groupings could not be calculated"
+		/>
+	
+	
+	
+	<!-- at least one file with an extension not on the inclusion list was found in the directory -->
+	<testStep name="log invalid file included"
+		outputExpression="Found the BAD FILES ${badFileList.![name]}"
+		executionLabelExpression="Printing the bad files to the logs >>> Search for BAD FILES"
+		nextStep="email invalid file included"
+		/>
+	
+	
+
+	<!-- email that invalid file included -->
+	<emailStep name="email invalid file included"
+		emailAddressesExpression="${emailAddress}"
+		subjectExpression="Found invalid files"
+		nextStep="invalid file included"
+		>
+		<body>
+			Error: Found invalid files
+			
+			Directory: ${directoryToIngest.absolutePath}
+			Invalid File List: ${badFileList.![name]}
+		</body>
+	</emailStep>
+
+	<!-- email error - unable to get framerate -->
+	<emailStep name="email framerate error"
+		emailAddressesExpression="${emailAddress}"
+		subjectExpression="Package Missing Framerate"
+		nextStep="missing framerate"
+		>
+		<body>
+			Error: Package Missing Framerate
+			
+			Directory: ${directoryToIngest.absolutePath}
+
+		</body>
+	</emailStep>
+
+	<!--	email picFrameType error -->
+	<emailStep name="email picFrameType error"
+		emailAddressesExpression="${emailAddress}"
+		subjectExpression="Package Missing Picture Frame Type (picFrameType)"
+		nextStep="missing picFrameType"
+		>
+		<body>
+			Error: Package Missing Picture Frame Type (picFrameType)
+			
+			Directory: ${directoryToIngest.absolutePath}
+
+		</body>
+	</emailStep>
+
+
+	
+	<!-- at least one file with an extension not on the inclusion list was found in the directory -->
+	<failWorkflowStep name="invalid file included"
+		reasonExpression="There was a file included in the directory with an extension not matching anything in the inclusion list ${inclusionList}"
+		executionLabelExpression="There was a file included in the directory with an extension not matching anything in the inclusion list ${inclusionList}"
+		/>
+
+	<!-- missing framerate -->
+	<failWorkflowStep name="missing framerate"
+		reasonExpression="Package Missing Framerate"
+		executionLabelExpression="Package Missing Framerate"
+		/>
+
+	<!-- missing framerate -->
+	<failWorkflowStep name="missing picFrameType"
+		reasonExpression="Package Missing Picture Frame Type"
+		executionLabelExpression="Package Missing Picture Frame Type"
+		/>
+
+	<!-- aspx found -->
+	<failWorkflowStep name="aspx found"
+		reasonExpression="Found aspx file in package."
+		executionLabelExpression="Found aspx file in package."
+		/>
+
+	<!-- sha1 item count does not match package file count -->
+	<failWorkflowStep name="count missmatch"
+		reasonExpression="sha1 item count does not match package file count"
+		executionLabelExpression="sha1 item count does not match package file count"
+		/>
+	
+	
+	
+	
+
+
+    <!-- ............................................. Data Defs ............................................. -->
+    <!-- ......... Input Variables .......... -->
+	<!-- directory with DPX files, XML, and sha1 -->
+    <contextDataDef name="directoryToIngest"        	dataType="Directory"	userInput="true"/>
+    
+    <!-- ......... Files Variables .......... -->
+	<!-- used for directory parsing -->
+    <contextDataDef name="regEx"                    	dataType="String" 							defaultDataExpression="(.*)_picture"/>
+	<!-- files to ingest from the directory, should end up being only dpx files -->
+	<contextDataDef name="filesToIngest"            	dataType="String" 		multiple="true"		defaultDataExpression="${#walkDir(directoryToIngest, null).![name].?[!#this.equals(metadataFile.name) AND !#this.equals(jsonMetadataFile.name) AND !#this.equals(sha1File.name)]}"/>
+	<!-- all of the tar files created from compressing picture frames. Used for ingest and archive. -->
+	<contextDataDef name="tarFilesToIngest" 			dataType="File"			multiple="true"/>
+	<!-- json sidecar file (if it exists) -->
+	<contextDataDef name="jsonMetadataFile" 			dataType="File"								defaultDataExpression="${directoryToIngest.absolutePath.endsWith('/')? directoryToIngest.absolutePath : directoryToIngest.absolutePath + '/'}${directoryToIngest.name}.json"/>
+	<!-- xml sidecar file -->
+	<contextDataDef name="metadataFile"             	dataType="File"								defaultDataExpression="${directoryToIngest.absolutePath.endsWith('/')? directoryToIngest.absolutePath : directoryToIngest.absolutePath + '/'}${directoryToIngest.name}.xml"/>
+	<!-- sha1 sidecar file -->
+	<contextDataDef name="sha1File"                  	dataType="File"								defaultDataExpression="${directoryToIngest.absolutePath.endsWith('/')? directoryToIngest.absolutePath : directoryToIngest.absolutePath + '/'}${directoryToIngest.name}.sha1"/>
+   
+    <!-- ........ Response Variables ......... -->
+	<!-- grouping json array that notates how the dpx files are grouped -->
+	<contextDataDef name="dpxGroupingJsonArray"         dataType="JSON"     	multiple="true"     defaultDataExpression="[]"/>
+	<!-- metadata extracted from the xml sidecar that has been mapped -->
+    <contextDataDef name="fullMetadataJson"    			dataType="JSON"/>
+	<!-- collection level metadata -->
+    <contextDataDef name="CollectionsJSON"              dataType="JSON"/>
+	<!-- asset level metadata -->
+    <contextDataDef name="AssetsJSON"                   dataType="JSON"/>
+
+    <!-- ........... Data Objects ............ -->
+	<!-- collection object found or created -->
+    <contextDataDef name="collection" 					dataType="Data Object"/>
+
+    <!-- ......... System Variables .......... -->
+	<!-- email to notify when errors occur -->
+    <contextDataDef name="emailAddress"     			dataType="String" 							defaultDataExpression="${#sysconfig('ingest.failureEmail')}"/>
+    <!-- collection name is equal to the directory name -->
+	<contextDataDef name="collectionName"  	 			dataType="String" 							defaultDataExpression="${directoryToIngest.name}"/>
+	<!-- variable used to see if there is a duplicate workflow running -->
+	<contextDataDef name="currentExecutions" 			dataType="Data Object"	multiple="true"/>
+	<!-- used to configure how many exec-servers to round robin with for sha1 and tar processes -->
+	<contextDataDef name="numberOfExecServers" 			dataType="Integer"							defaultDataExpression="${#sysconfig('exec-server.numberOfServers')}"/>
+	<!-- time to log as start of ingest -->
+	<contextDataDef name="startTime" 					dataType="Double"/>
+	<!-- time to log as end of ingest -->
+	<contextDataDef name="endTime" 						dataType="Double"/>
+	<!-- content type of this directory -->
+	<contextDataDef name="contentType" 					dataType="String"							defaultDataExpression="picture"/>
+	
+	<contextDataDef name="sha1FileCount" 			dataType="Integer"						/>
+	<contextDataDef name="wcOutput" 			dataType="String"						/>
+	
+	<!-- Package Validation -->
+
+	<contextDataDef name="framerate" 				dataType="Integer" 							/>
+	<contextDataDef name="picFrameType" 				dataType="String" 							/>
+	<!-- . Variables for extension checking . -->
+	<!-- file extensions that are allowed to be in the directory when processed -->
+	<contextDataDef name="inclusionList" 				dataType="String" 							defaultDataExpression="${#sysconfig('ingest.picture.validExtensions')}"/>
+	<!-- all of the files that have a bad extension in them, used for logging -->
+	<contextDataDef name="badFileList" 					dataType="File" 		multiple="true"/>
+	<contextDataDef name="hasASPX" 					dataType="Boolean" 		defaultDataExpression="false"/>
+	
+</workflow>

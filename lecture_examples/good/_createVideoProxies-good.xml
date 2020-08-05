@@ -1,0 +1,182 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2018 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://levelsbeyond.com/schema/workflow"
+	xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+	xsi:schemaLocation="
+		http://levelsbeyond.com/schema/workflow http://www.levelsbeyond.com/schema/workflow-5.17.xsd
+		http://levelsbeyond.com/schema/workflow/nimbus http://www.levelsbeyond.com/schema/production/nimbus-common-workflow-1.11.xsd
+	"
+    id="_createVideoProxies-good"
+    name="Create Video Proxies - Good"
+    executionLabelExpression="Create Video Proxies - Good | asset: ${subject.name}"
+    subjectDOClassName="VideoAssetMaster"
+    showInUserInterface="true"
+    sdkVersion="5.21"
+    >
+
+	<initialStepName>check proxies options</initialStepName>
+
+	
+	<noopStep name="check proxies options"
+		executionLabelExpression="Mezz option? ${mezzFile != null AND !mezzFile.absolutePath.equals('')? 'File Given' : (createMezz? 'Create' : 'None')} | Proxy option? ${proxyFile != null AND !proxyFile.absolutePath.equals('')? 'File Given' : (createProxy? 'Create' : 'None')} | Thumb Video option? ${thumbVideoFile != null AND !thumbVideoFile.absolutePath.equals('')? 'File Given' : (createThumbVideo? 'Create' : 'None')} | Thumb option? ${thumbFile != null AND !thumbFile.absolutePath.equals('')? 'File Given' : (createThumb? 'Create' : 'None')}"
+		pctComplete="2"
+		>
+		<transition condition="${mezzFile != null OR createMezz}">
+			<targetStepName>create mezzanine</targetStepName>
+		</transition>
+		<transition condition="${proxyFile != null OR createProxy}">
+			<targetStepName>create proxy</targetStepName>
+		</transition>
+		<transition condition="${thumbVideoFile != null OR createThumbVideo}">
+			<targetStepName>create thumb video</targetStepName>
+		</transition>
+		<transition condition="${thumbFile != null OR createThumb}">
+			<targetStepName>create thumb</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>end</targetStepName>
+		</transition>
+	</noopStep>
+	
+
+	<executeSubflowStep name="create mezzanine"
+		executionLabelExpression="${mezzFile != null AND !mezzFile.absolutePath.equals('') ? 'Save new mezz file' : 'Create new mezz file'}"
+		targetWorkflowId="_createVideoContent"
+		subjectChangePath="${subject}"
+		>
+		<transition condition="${proxyFile != null OR createProxy}">
+			<targetStepName>create proxy</targetStepName>
+		</transition>
+		<transition condition="${thumbVideoFile != null OR createThumbVideo}">
+			<targetStepName>create thumb video</targetStepName>
+		</transition>
+		<transition condition="${thumbFile != null OR createThumb}">
+			<targetStepName>create thumb</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>end</targetStepName>
+		</transition>
+		
+		<subflowContextDataMapping parentDataDef="failOnError"            subflowDataDef="failOnError"/>
+		<subflowContextDataMapping parentDataDef="mezzContentUse"         subflowDataDef="contentUse"/>
+		<subflowContextDataMapping parentDataDef="mezzFile"               subflowDataDef="contentFile"/>
+		<subflowContextDataMapping parentDataDef="mezzTemplate"           subflowDataDef="transcodeTemplate"/>
+		<subflowContextDataMapping parentDataDef="mezzPriority"           subflowDataDef="priority"/>
+	</executeSubflowStep>
+	
+	
+	<executeSubflowStep name="create proxy"
+		executionLabelExpression="${proxyFile != null AND !proxyFile.absolutePath.equals('') ? 'Save new proxy file' : 'Create new proxy file'}"
+		targetWorkflowId="_createVideoContent"
+		subjectChangePath="${subject}"
+		>
+		<transition condition="${thumbVideoFile != null OR createThumbVideo}">
+			<targetStepName>create thumb video</targetStepName>
+		</transition>
+		<transition condition="${thumbFile != null OR createThumb}">
+			<targetStepName>create thumb</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>end</targetStepName>
+		</transition>
+		
+		<subflowContextDataMapping parentDataDef="failOnError"            subflowDataDef="failOnError"/>
+		<subflowContextDataMapping parentDataDef="proxyContentUse"        subflowDataDef="contentUse"/>
+		<subflowContextDataMapping parentDataDef="proxyFile"              subflowDataDef="contentFile"/>
+		<subflowContextDataMapping parentDataDef="proxyTemplate"          subflowDataDef="transcodeTemplate"/>
+		<subflowContextDataMapping parentDataDef="proxyPriority"          subflowDataDef="priority"/>
+	</executeSubflowStep>
+	
+	
+	<executeSubflowStep name="create thumb video"
+		executionLabelExpression="${proxyFile != null AND !proxyFile.absolutePath.equals('') ? 'Save new proxy file' : 'Create new proxy file'}"
+		targetWorkflowId="_createVideoContent"
+		subjectChangePath="${subject}"
+		>
+		<transition condition="${thumbFile != null OR createThumb}">
+			<targetStepName>create thumb</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>end</targetStepName>
+		</transition>
+		
+		<subflowContextDataMapping parentDataDef="failOnError"            subflowDataDef="failOnError"/>
+		<subflowContextDataMapping parentDataDef="thumbVideoContentUse"   subflowDataDef="contentUse"/>
+		<subflowContextDataMapping parentDataDef="thumbVideoFile"         subflowDataDef="contentFile"/>
+		<subflowContextDataMapping parentDataDef="thumbVideoTemplate"     subflowDataDef="transcodeTemplate"/>
+		<subflowContextDataMapping parentDataDef="thumbVideoPriority"     subflowDataDef="priority"/>
+	</executeSubflowStep>
+	
+	
+	<executeSubflowStep name="create thumb"
+		targetWorkflowId="_createVideoContent"
+		subjectChangePath="${subject}"
+		nextStep="end"
+		>
+		<subflowContextDataMapping parentDataDef="failOnError"            subflowDataDef="failOnError"/>
+		<subflowContextDataMapping parentDataDef="thumbContentUse"        subflowDataDef="contentUse"/>
+		<subflowContextDataMapping parentDataDef="thumbFile"              subflowDataDef="contentFile"/>
+		<subflowContextDataMapping parentDataDef="thumbnailPercentage"    subflowDataDef="thumbnailPercentage"/>
+		<subflowContextDataMapping parentDataDef="thumbPriority"          subflowDataDef="priority"/>
+	</executeSubflowStep>
+	
+	
+	<!-- ...................................................... End Steps ...................................................... -->
+	<!-- success -->
+	<noopStep name="end"	pctComplete="100"/>
+ 
+ 
+	<!-- .................................................. Context Data Defs .................................................. -->
+	<!-- ............ Input Variables ............. -->
+	<contextDataDef name="failOnError"          dataType="Boolean"      defaultDataExpression="${#sysconfig('workflows.default.proxies.failOnError') ?: true}"/>
+	<!-- Mezz -->
+	<contextDataDef name="mezzFile"             dataType="File"/>
+	<contextDataDef name="createMezz"           dataType="Boolean"      defaultDataExpression="${#sysconfig('workflows.default.proxies.video.createMezz') ?: false}"/>
+	<!-- Proxy -->
+	<contextDataDef name="proxyFile"            dataType="File"/>
+	<contextDataDef name="createProxy" 			dataType="Boolean"		defaultDataExpression="${#sysconfig('workflows.default.proxies.video.createProxy') ?: true}"/>
+	<!-- Thumb Video -->
+	<contextDataDef name="thumbVideoFile"       dataType="File"/>
+	<contextDataDef name="createThumbVideo" 	dataType="Boolean"	    defaultDataExpression="${#sysconfig('workflows.default.proxies.video.createThumbVideo') ?: true}"/>
+	<!-- Thumb -->
+	<contextDataDef name="thumbFile"            dataType="File"/>
+	<contextDataDef name="createThumb" 			dataType="Boolean"	    defaultDataExpression="${#sysconfig('workflows.default.proxies.video.createThumb') ?: true}"/>
+	<!-- templates -->
+	<contextDataDef name="mezzTemplate"    		dataType="String"       defaultDataExpression="${#sysconfig('workflows.default.proxies.video.mezzTemplate') ?: (#sysconfig('import.mezzanineSettingName') ?: 'FFmpeg Mezz')}" />
+	<contextDataDef name="proxyTemplate"    	dataType="String"       defaultDataExpression="${#sysconfig('workflows.default.proxies.video.proxyTemplate') ?: (#sysconfig('import.proxySettingName') ?: 'FFmpeg Proxy')}" />
+	<contextDataDef name="thumbVideoTemplate"   dataType="String"       defaultDataExpression="${#sysconfig('workflows.default.proxies.video.thumbVideoTemplate') ?: (#sysconfig('import.thumbnailMovSettingName') ?: 'FFmpeg Thumb MOV')}" />
+	<contextDataDef name="thumbnailPercentage"  dataType="Integer"      defaultDataExpression="${#sysconfig('workflows.default.proxies.video.thumbPercentage') ?: 0}"/>
+	<contextDataDef name="prioritiesJson"       dataType="JSON">
+		<description>
+			A JSON with the structure:
+				{"mezzanine":w, "proxy":x, "thumbnailVideo":y, "thumbnail":z}
+		</description>
+	</contextDataDef>
+	
+	<!-- .......... Processing variables .......... -->
+	<contextDataDef name="mezzPriority"         dataType="Integer"      defaultDataExpression="${prioritiesJson?.get('mezzanine') != null ? prioritiesJson.get('mezzanine').asText() : 0}"/>
+	<contextDataDef name="proxyPriority"        dataType="Integer"      defaultDataExpression="${prioritiesJson?.get('proxy') != null ? prioritiesJson.get('proxy').asText() : 0}"/>
+	<contextDataDef name="thumbVideoPriority"   dataType="Integer"      defaultDataExpression="${prioritiesJson?.get('thumbnailVideo') != null ? prioritiesJson.get('thumbnailVideo').asText() : 0}"/>
+	<contextDataDef name="thumbPriority"        dataType="Integer"      defaultDataExpression="${prioritiesJson?.get('thumbnail') != null ? prioritiesJson.get('thumbnail').asText() : 0}"/>
+	<contextDataDef name="mezzContentUse"       dataType="String"       defaultDataExpression="Mezzanine"/>
+	<contextDataDef name="proxyContentUse"      dataType="String"       defaultDataExpression="Proxy"/>
+	<contextDataDef name="thumbVideoContentUse" dataType="String"       defaultDataExpression="Thumbnail_Video"/>
+	<contextDataDef name="thumbContentUse"      dataType="String"       defaultDataExpression="Thumbnail"/>
+	
+</workflow>

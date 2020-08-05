@@ -1,0 +1,214 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2018 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://levelsbeyond.com/schema/workflow"
+	xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+	xsi:schemaLocation="
+		http://levelsbeyond.com/schema/workflow http://www.levelsbeyond.com/schema/workflow-5.17.xsd
+		http://levelsbeyond.com/schema/workflow/nimbus http://www.levelsbeyond.com/schema/production/nimbus-common-workflow-1.11.xsd
+	"
+    id="_createVideoContent"
+    name="Create Video Content"
+    executionLabelExpression="Create Video Content | Content Use: ${contentUse} | asset: ${subject.name}"
+    subjectDOClassName="VideoAssetMaster"
+    showInUserInterface="false"
+    sdkVersion="5.21"
+    >
+
+	<initialStepName>check content options</initialStepName>
+	
+	
+	<!-- ............................................... Initial Checks ................................................ -->
+	<noopStep name="check content options"
+		executionLabelExpression="${contentUse} option? ${contentFile != null AND !contentFile.absolutePath.equals('') ? 'File Given' : 'Create'}"
+		pctComplete="2"
+		>
+		<transition condition="${contentFile != null AND !contentFile.absolutePath.equals('') AND oldAssetContent != null AND oldAssetContent.file.exists()}">
+			<targetStepName>delete old content file</targetStepName>
+		</transition>
+		<transition condition="${contentFile != null AND !contentFile.absolutePath.equals('')}">
+			<targetStepName>save content</targetStepName>
+		</transition>
+		<transition condition="${contentUse.toLowerCase().equals('thumbnail') AND #thumbnailMovContent(subject).file.exists()}">
+			<targetStepName>create thumb</targetStepName>
+		</transition>
+		<transition condition="${contentUse.toLowerCase().equals('thumbnail')}">
+			<targetStepName>thumb error</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>transcode content file</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	<noopStep name="thumb error"
+		executionLabelExpression="No Thumbnail Video Content Found. Thumb Video is required to create a Thumbnail. | fail? ${failOnError}"
+		>
+		<transition condition="${failOnError}">
+			<targetStepName>content failed to create or save</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>end</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	<!-- ............................................ Create Content Steps ............................................. -->
+	<convertVideoStep name="transcode content file"
+		sourceFileExpression="${sourceFile}"
+		mediaConversionTemplateExpression="${transcodeTemplate}"
+		resultDataDef="tempFile"
+		priorityExpression="${priority}"
+		continueOnException="true"
+		executionLabelExpression="Transcode ${contentUse} from original file. | Profile: ${transcodeTemplate}"
+		pctComplete="50"
+		>
+		<transition condition="${tempFile?.exists()}">
+			<targetStepName>set content file</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>error</targetStepName>
+		</transition>
+	</convertVideoStep>
+	
+	
+	<convertImageStep name="create thumb"
+		sourceFileExpression="${#thumbnailMovContent(subject)?.file}"
+		resultDataDef="tempFile"
+		thumbnailPercentageExpression="${thumbnailPercentage}"
+		priorityExpression="${priority}"
+		continueOnException="true"
+		executionLabelExpression="creating new thumbnail from existing Thumbnail Video."
+		pctComplete="50"
+		>
+		<transition condition="${tempFile != null AND tempFile.exists()}">
+			<targetStepName>set content file</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>error</targetStepName>
+		</transition>
+	</convertImageStep>
+	
+	
+	<setContextData name="set content file"
+		targetDataDef="contentFile"
+		valueExpression="${tempFile}"
+		pctComplete="52"
+		devStep="true"
+		>
+		<transition condition="${oldAssetContent != null}">
+			<targetStepName>delete old content file</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>save content</targetStepName>
+		</transition>
+	</setContextData>
+	
+	
+	<deleteFileStep name="delete old content file"
+		sourceFilesExpression="${ oldAssetContent.file }"
+		executionLabelExpression="deleting old ${contentUse}: ${oldAssetContent?.file?.absolutePath}"
+		continueOnException="true"
+		pctComplete="55"
+		nextStep="save content"
+		/>
+	
+	
+	<!-- ............................................. Save Content Steps .............................................. -->
+	<saveAssetStep name="save content"
+		contentExpression="${contentFile}"
+		contentUseExpression="${contentUse}"
+		versionAssetExpression="false"
+		assetExpression="${subject.currentVersion}"
+		executionLabelExpression="Save new ${contentUse} to asset | file: ${contentFile?.absolutePath}"
+		pctComplete="80"
+		nextStep="cleanup"
+		>
+		<!-- Errors -->
+		<exception-transition type="WorkflowException">
+			<targetStepName>error</targetStepName>
+		</exception-transition>
+		<exception-transition type="AssetException">
+			<targetStepName>error</targetStepName>
+		</exception-transition>
+		<exception-transition type="NullPointerException">
+			<targetStepName>error</targetStepName>
+		</exception-transition>
+	</saveAssetStep>
+	
+	
+	<noopStep name="error"
+		executionLabelExpression="there was an error creating/saving content. | fail? ${failOnError}"
+		>
+		<transition condition="${failOnError}">
+			<targetStepName>content failed to create or save</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>cleanup</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	<!-- ............................................... Clean Up Steps ................................................ -->
+	<noopStep name="cleanup"
+		executionLabelExpression="temp file to delete? ${tempFile.exists()}"
+		pctComplete="85"
+		>
+		<transition condition="${tempFile != null AND tempFile.exists()}">
+			<targetStepName>delete temp file</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>end</targetStepName>
+		</transition>
+	</noopStep>
+	
+	
+	<deleteFileStep name="delete temp file"
+		sourceFilesExpression="${tempFile}"
+		continueOnException="true"
+		executionLabelExpression="deleting ${tempFile.absolutePath}"
+		pctComplete="99"
+		nextStep="end"
+		/>
+	
+	
+	<!-- .................................................. End Steps .................................................. -->
+	<noopStep name="end"	pctComplete="100"/>
+	
+	
+	<failWorkflowStep name="content failed to create or save"
+		reasonExpression="Content creation failed or failed to save to repo. Check workflow step for details."
+		executionLabelExpression="Content creation failed or failed to save to repo. Check workflow step for details."
+		/>
+    
+    
+	<!-- .............................................. Context Data Defs .............................................. -->
+	<!-- ............ Input Variables ............. -->
+	<contextDataDef name="contentUse"           dataType="String"/>
+	<contextDataDef name="contentFile"          dataType="File"/>
+	<contextDataDef name="transcodeTemplate"    dataType="String"/>
+	<contextDataDef name="failOnError"          dataType="Boolean"      defaultDataExpression="true"/>
+	<contextDataDef name="priority"             dataType="Integer"      defaultDataExpression="0"/>
+	<contextDataDef name="thumbnailPercentage"  dataType="Integer"      defaultDataExpression="0"/>
+	
+	<!-- .......... Processing variables .......... -->
+	<contextDataDef name="sourceFile" 		    dataType="File"         defaultDataExpression="${#sourceContent(subject)?.file}"/>
+	<contextDataDef name="tempFile"        	    dataType="File"/>
+	<contextDataDef name="oldAssetContent"      dataType="Data Object"  defaultDataExpression="${subject.contents.^[contentUses.toString().toLowerCase().contains(#root.contentUse.toLowerCase())]}"/>
+	
+</workflow>
