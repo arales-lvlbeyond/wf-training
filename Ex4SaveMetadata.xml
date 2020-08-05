@@ -27,6 +27,9 @@
 >
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> adding savedataobject step
     <initialStepName>display asset</initialStepName>
 
     <noopStep name="display asset"
@@ -42,6 +45,7 @@
               executionLabelExpression="Saving metadata for ${assetName}"
               dataObjectExpression="${subject.metadata}"
               nextStep="end">
+<<<<<<< HEAD
         <property name="testValueA">${testValueAlpha}</property>
         <property name="testValueA1">${testValueA1}</property>
         <property name="testSinglePicklist">${testSinglePicklistOptions}</property>
@@ -52,6 +56,10 @@
 
 
 >>>>>>> initial commit ex4
+=======
+        <property name="testValueA">${testValueA}</property>
+    </saveDataObjectStep>
+>>>>>>> adding savedataobject step
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
     <noopStep name="end"/>
@@ -60,6 +68,7 @@
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     <contextDataDef name="asset" dataType="Data Object" defaultDataExpression="${subject}" />
     <contextDataDef name="assetName" dataType="String" defaultDataExpression="${asset.name}" />
@@ -80,6 +89,10 @@
 =======
 >>>>>>> initial commit ex4
 
+=======
+    <contextDataDef name="asset" dataType="Data Object" defaultDataExpression="${subject}" />
+    <contextDataDef name="assetName" dataType="String" defaultDataExpression="${asset.name}" />
+>>>>>>> adding savedataobject step
     <!-- ......... PROCESSING ........... -->
 
 
