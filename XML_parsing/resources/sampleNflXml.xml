@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FORKImport>
+    <clip>
+        <name>dcl_broadcast_play_2018_20_KC_NE_50105_0044_dirty</name>
+        <filecontainer>M3 CHECKIN DCL 01</filecontainer>
+        <filename>dcl_metadata_test_01.mov</filename>
+        <duration>00:02:34:00</duration>
+        <properties>
+            <property>
+                <name>NFL_TAG</name>
+                <value>fakk</value>
+            </property>
+        </properties>
+        <properties>
+            <property>
+                <name>NFL_CLEARANCE</name>
+                <value/>
+            </property>
+        </properties>
+    </clip>
+</FORKImport>

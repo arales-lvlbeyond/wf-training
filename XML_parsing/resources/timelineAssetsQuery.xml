@@ -1,0 +1,379 @@
+<?xml version='1.0' encoding='utf-8'?>
+<response successFlag='true' code="200" node="172.17.30.160" sessionKey="05f01100-025b-11ea-b71b-5254007e550a" aliased="false">
+    <object-collection count="1">
+        <results>
+            <TimelineAsset id="245483" ref="0" name="2_951_pit_fla_1718_a_whole_150M_16x9" dateCreated="2019-03-12T21:36:13.075-00:00" uuid="f9dfdcfd-e3f0-45b1-b1cf-386c54e82206" dateUpdated="2019-03-12T21:36:13.075-00:00">
+                <thumbnail />
+                <asset>
+                    <VideoAssetMaster id="24164009" ref="1" />
+                </asset>
+                <timelineMedia>
+                    <TimelineVideo id="245463" ref="1" />
+                </timelineMedia>
+                <timeline>
+                    <Timeline id="6248041" ref="1" />
+                </timeline>
+            </TimelineAsset>
+        </results>
+        <dependents>
+            <Timeline id="6248041" ref="0" _label="2017020951" endTimecode="20:19:34:09" categoryNames="|Game Collections|" mediaArchivedFlag="1" type="" thumbnailAssetId="" dateUpdated="2019-03-13T21:13:44.485-00:00" timezone="America/New_York" timelineEndOffset="19174.296" startTimecode="15:00:00:00" displayFramerate="" name="2017020951" frameRate="59.94" displayEndDateTime="" isDateTimeFormat="1" durationhhmmssff="05:19:34:18" zeroYearMonthDay="" inventoryTypeName="timeline" displayStartDateTime="2018-02-24T23:00:00.000-00:00" lastImportDate="" targetFramerate="FR_29_97" timecodeFormat="NON_DROP_FRAME" editable="1" zeroTime="54000" duration="19174.296" timecodeDuration="05:19:34:18" segmentTypeStr="TIMELINE" displayStartTimecode="" layoutName="" dateCreated="2019-03-12T21:35:15.212-00:00" uuid="de80c4ce-d017-421e-9483-ba19a71c2451" timelineStartOffset="0" multipleDays="0">
+                <thumbnailRef>
+                    <ImageAssetContent id="21650808" ref="1" />
+                </thumbnailRef>
+                <primaryTrack>
+                    <TimelineTrack id="247440" ref="1" />
+                </primaryTrack>
+                <audio />
+                <documents />
+                <markers>
+                    <Marker id="6248878" ref="1" />
+                    <Marker id="6248886" ref="1" />
+                    <Marker id="6248879" ref="1" />
+                    <Marker id="6248894" ref="1" />
+                    <Marker id="6248880" ref="1" />
+                    <Marker id="6248881" ref="1" />
+                    <Marker id="6248896" ref="1" />
+                    <Marker id="6248888" ref="1" />
+                    <Marker id="6248885" ref="1" />
+                    <Marker id="6248882" ref="1" />
+                    <Marker id="6248883" ref="1" />
+                    <Marker id="6248884" ref="1" />
+                    <Marker id="6248887" ref="1" />
+                    <Marker id="6248889" ref="1" />
+                    <Marker id="6248892" ref="1" />
+                    <Marker id="6248890" ref="1" />
+                    <Marker id="6248897" ref="1" />
+                    <Marker id="6248891" ref="1" />
+                    <Marker id="6248893" ref="1" />
+                    <Marker id="6248898" ref="1" />
+                    <Marker id="6248895" ref="1" />
+                </markers>
+                <videos>
+                    <TimelineVideo id="245460" ref="1" />
+                    <TimelineVideo id="245461" ref="1" />
+                    <TimelineVideo id="245462" ref="1" />
+                    <TimelineVideo id="245463" ref="1" />
+                    <TimelineVideo id="245464" ref="1" />
+                </videos>
+                <mainProxyContent>
+                    <VideoAssetContent id="21650803" ref="1" />
+                </mainProxyContent>
+                <tracks>
+                    <TimelineTrack id="247440" ref="1" />
+                    <TimelineTrack id="247441" ref="1" />
+                    <TimelineTrack id="247442" ref="1" />
+                    <TimelineTrack id="247443" ref="1" />
+                    <TimelineTrack id="247444" ref="1" />
+                    <TimelineTrack id="247445" ref="1" />
+                    <TimelineTrack id="247446" ref="1" />
+                    <TimelineTrack id="247447" ref="1" />
+                    <TimelineTrack id="247448" ref="1" />
+                    <TimelineTrack id="247449" ref="1" />
+                </tracks>
+                <clips>
+                    <Clip id="6250192" ref="1" />
+                </clips>
+                <timelineAssets>
+                    <TimelineAsset id="245484" ref="1" />
+                    <TimelineAsset id="245483" ref="1" />
+                    <TimelineAsset id="245482" ref="1" />
+                    <TimelineAsset id="245481" ref="1" />
+                    <TimelineAsset id="245480" ref="1" />
+                </timelineAssets>
+                <clipCategories>
+                    <AssetCategory id="920" ref="1" />
+                </clipCategories>
+                <collectionMemberships>
+                    <AssetCollectionItem id="18115340" ref="1" />
+                </collectionMemberships>
+                <creator />
+                <mainMezzanineContent>
+                    <VideoAssetContent id="21650788" ref="1" />
+                </mainMezzanineContent>
+                <mainVideoAsset>
+                    <VideoAssetMaster id="24164021" ref="1" />
+                </mainVideoAsset>
+                <project />
+                <timelineBinAssets />
+                <editProxyContent>
+                    <VideoAssetContent id="21650803" ref="1" />
+                </editProxyContent>
+                <thumbnail>
+                    <ImageAssetContent id="21650808" ref="1" />
+                </thumbnail>
+                <usageEntries ref="1" />
+                <listMemberships />
+                <images />
+                <media>
+                    <TimelineVideo id="245460" ref="1" />
+                    <TimelineVideo id="245461" ref="1" />
+                    <TimelineVideo id="245462" ref="1" />
+                    <TimelineVideo id="245463" ref="1" />
+                    <TimelineVideo id="245464" ref="1" />
+                </media>
+            </Timeline>
+            <TimelineVideo id="245463" ref="0" videoOrder="3" trackNumber="" type="Video" dateUpdated="2019-03-12T21:36:13.064-00:00" duration="10086.687" timelineEndOffset="13697.07" timecodeOffset="" name="2_951_pit_fla_1718_a_whole_150M_16x9" dateCreated="2019-03-12T21:36:13.064-00:00" markIn="" timelineStartOffset="3610.383" uuid="7f91f2fe-252f-44b1-9ec5-64964d78436e" markOut="">
+                <proxyContent>
+                    <VideoAssetContent id="21650784" ref="1" />
+                </proxyContent>
+                <timeline>
+                    <Timeline id="6248041" ref="1" />
+                </timeline>
+                <track>
+                    <TimelineTrack id="247441" ref="1" />
+                </track>
+                <timelineAsset>
+                    <TimelineAsset id="245483" ref="1" />
+                </timelineAsset>
+                <segmentUsageEntries />
+            </TimelineVideo>
+            <VideoAssetMaster id="24164009" ref="0" _label="2_951_pit_fla_1718_a_whole_150M_16x9" endTimecode="21:48:17;07" categoryNames="|NHL|" mediaArchivedFlag="1" sourceDateCreated="" dateUpdated="2018-02-25T14:31:23.378-00:00" title="" assetType="Video" description="" startTimecode="19:00:10;23" name="2_951_pit_fla_1718_a_whole_150M_16x9" durationhhmmssff="02:48:06:41" truncatedFlag="1" keywords="" status="AVAILABLE" inventoryTypeName="video" filePath="/reachengine/sourceRepo/2_951_pit_fla_1718_a_whole_150M_16x9.mov" caption="" createdBy="" searchableFlag="0" dateCreated="2018-02-25T12:13:02.217-00:00" uuid="0e735645-d469-4d68-a0b9-199590195e09" dateLocked="" currentVersionDateCreated="2018-02-25T12:13:02.252-00:00">
+                <thumbnailRef>
+                    <ImageAssetContent id="21650792" ref="1" />
+                </thumbnailRef>
+                <mezzanine>
+                    <VideoAssetContent id="21650704" ref="1" />
+                </mezzanine>
+                <lockedBy />
+                <contents ref="1" />
+                <assetClips>
+                    <VideoClip id="8551066570" ref="1" />
+                    <VideoClip id="8551065780" ref="1" />
+                    <VideoClip id="8551065670" ref="1" />
+                    <VideoClip id="8551065650" ref="1" />
+                    <VideoClip id="8551065600" ref="1" />
+                    <VideoClip id="8551065470" ref="1" />
+                    <VideoClip id="8551065410" ref="1" />
+                    <VideoClip id="8551065340" ref="1" />
+                    <VideoClip id="8551065320" ref="1" />
+                    <VideoClip id="8551066080" ref="1" />
+                    <VideoClip id="8551066050" ref="1" />
+                    <VideoClip id="8551066040" ref="1" />
+                    <VideoClip id="8551066030" ref="1" />
+                    <VideoClip id="8551066010" ref="1" />
+                    <VideoClip id="8551066000" ref="1" />
+                    <VideoClip id="8551065940" ref="1" />
+                    <VideoClip id="8551066270" ref="1" />
+                    <VideoClip id="8551066190" ref="1" />
+                    <VideoClip id="8551066320" ref="1" />
+                    <VideoClip id="8551066290" ref="1" />
+                    <VideoClip id="8551065150" ref="1" />
+                    <VideoClip id="8551065050" ref="1" />
+                    <VideoClip id="8551064940" ref="1" />
+                    <VideoClip id="8551064910" ref="1" />
+                    <VideoClip id="8551064830" ref="1" />
+                    <VideoClip id="8551064820" ref="1" />
+                    <VideoClip id="8551066540" ref="1" />
+                    <VideoClip id="8551066520" ref="1" />
+                    <VideoClip id="8551064770" ref="1" />
+                    <VideoClip id="8551064600" ref="1" />
+                    <VideoClip id="8551064550" ref="1" />
+                    <VideoClip id="8551065870" ref="1" />
+                    <VideoClip id="8551065300" ref="1" />
+                    <VideoClip id="8551065280" ref="1" />
+                    <VideoClip id="8551065240" ref="1" />
+                    <VideoClip id="8551065170" ref="1" />
+                    <VideoClip id="8551065060" ref="1" />
+                    <VideoClip id="8551065020" ref="1" />
+                    <VideoClip id="8551064970" ref="1" />
+                    <VideoClip id="8551065990" ref="1" />
+                    <VideoClip id="8551065900" ref="1" />
+                    <VideoClip id="8551064510" ref="1" />
+                    <VideoClip id="8551066420" ref="1" />
+                    <VideoClip id="8551064860" ref="1" />
+                    <VideoClip id="8551064810" ref="1" />
+                    <VideoClip id="8551064790" ref="1" />
+                    <VideoClip id="8551064780" ref="1" />
+                    <VideoClip id="8551064740" ref="1" />
+                    <VideoClip id="8551064730" ref="1" />
+                    <VideoClip id="8551064690" ref="1" />
+                    <VideoClip id="8551066360" ref="1" />
+                    <VideoClip id="8551066260" ref="1" />
+                    <VideoClip id="8551065800" ref="1" />
+                    <VideoClip id="8551065790" ref="1" />
+                    <VideoClip id="8551065520" ref="1" />
+                    <VideoClip id="8551065510" ref="1" />
+                    <VideoClip id="8551065420" ref="1" />
+                    <VideoClip id="8551065310" ref="1" />
+                    <VideoClip id="8551066140" ref="1" />
+                    <VideoClip id="8551064480" ref="1" />
+                    <VideoClip id="8551065840" ref="1" />
+                    <VideoClip id="8551065710" ref="1" />
+                    <VideoClip id="8551065290" ref="1" />
+                    <VideoClip id="8551065270" ref="1" />
+                    <VideoClip id="8551066560" ref="1" />
+                    <VideoClip id="8551066450" ref="1" />
+                    <VideoClip id="8551066400" ref="1" />
+                    <VideoClip id="8551066380" ref="1" />
+                    <VideoClip id="8551066370" ref="1" />
+                    <VideoClip id="8551064580" ref="1" />
+                    <VideoClip id="8551064570" ref="1" />
+                    <VideoClip id="8551066090" ref="1" />
+                    <VideoClip id="8551066020" ref="1" />
+                    <VideoClip id="8551065960" ref="1" />
+                    <VideoClip id="8551065120" ref="1" />
+                    <VideoClip id="8551065080" ref="1" />
+                    <VideoClip id="8551065000" ref="1" />
+                    <VideoClip id="8551064960" ref="1" />
+                    <VideoClip id="8551064880" ref="1" />
+                    <VideoClip id="8551064850" ref="1" />
+                    <VideoClip id="8551066390" ref="1" />
+                    <VideoClip id="8551066510" ref="1" />
+                    <VideoClip id="8551064500" ref="1" />
+                    <VideoClip id="8551065440" ref="1" />
+                    <VideoClip id="8551065430" ref="1" />
+                    <VideoClip id="8551065360" ref="1" />
+                    <VideoClip id="8551065200" ref="1" />
+                    <VideoClip id="8551065130" ref="1" />
+                    <VideoClip id="8551065110" ref="1" />
+                    <VideoClip id="8551065090" ref="1" />
+                    <VideoClip id="8551065910" ref="1" />
+                    <VideoClip id="8551065820" ref="1" />
+                    <VideoClip id="8551065530" ref="1" />
+                    <VideoClip id="8551066170" ref="1" />
+                    <VideoClip id="8551066150" ref="1" />
+                    <VideoClip id="8551066070" ref="1" />
+                    <VideoClip id="8551064990" ref="1" />
+                    <VideoClip id="8551064980" ref="1" />
+                    <VideoClip id="8551064900" ref="1" />
+                    <VideoClip id="8551064890" ref="1" />
+                    <VideoClip id="8551066230" ref="1" />
+                    <VideoClip id="8551066210" ref="1" />
+                    <VideoClip id="8551066200" ref="1" />
+                    <VideoClip id="8551066530" ref="1" />
+                    <VideoClip id="8551064490" ref="1" />
+                    <VideoClip id="8551066120" ref="1" />
+                    <VideoClip id="8551066060" ref="1" />
+                    <VideoClip id="8551065980" ref="1" />
+                    <VideoClip id="8551065890" ref="1" />
+                    <VideoClip id="8551065880" ref="1" />
+                    <VideoClip id="8551065830" ref="1" />
+                    <VideoClip id="8551065730" ref="1" />
+                    <VideoClip id="8551065720" ref="1" />
+                    <VideoClip id="8551065700" ref="1" />
+                    <VideoClip id="8551065690" ref="1" />
+                    <VideoClip id="8551065630" ref="1" />
+                    <VideoClip id="8551065620" ref="1" />
+                    <VideoClip id="8551066180" ref="1" />
+                    <VideoClip id="8551064670" ref="1" />
+                    <VideoClip id="8551064640" ref="1" />
+                    <VideoClip id="8551064610" ref="1" />
+                    <VideoClip id="8551064590" ref="1" />
+                    <VideoClip id="8551064530" ref="1" />
+                    <VideoClip id="8551065540" ref="1" />
+                    <VideoClip id="8551065460" ref="1" />
+                    <VideoClip id="8551065450" ref="1" />
+                    <VideoClip id="8551065400" ref="1" />
+                    <VideoClip id="8551065390" ref="1" />
+                    <VideoClip id="8551065330" ref="1" />
+                    <VideoClip id="8551065260" ref="1" />
+                    <VideoClip id="8551065180" ref="1" />
+                    <VideoClip id="8551065160" ref="1" />
+                    <VideoClip id="8551064800" ref="1" />
+                    <VideoClip id="8551066160" ref="1" />
+                    <VideoClip id="8551065810" ref="1" />
+                    <VideoClip id="8551065770" ref="1" />
+                    <VideoClip id="8551065680" ref="1" />
+                    <VideoClip id="8551065660" ref="1" />
+                    <VideoClip id="8551065610" ref="1" />
+                    <VideoClip id="8551065590" ref="1" />
+                    <VideoClip id="8551065580" ref="1" />
+                    <VideoClip id="8551065490" ref="1" />
+                    <VideoClip id="8551065480" ref="1" />
+                    <VideoClip id="8551065380" ref="1" />
+                    <VideoClip id="8551066480" ref="1" />
+                    <VideoClip id="8551066460" ref="1" />
+                    <VideoClip id="8551066430" ref="1" />
+                    <VideoClip id="8551066410" ref="1" />
+                    <VideoClip id="8551066340" ref="1" />
+                    <VideoClip id="8551066280" ref="1" />
+                    <VideoClip id="8551065370" ref="1" />
+                    <VideoClip id="8551065220" ref="1" />
+                    <VideoClip id="8551065070" ref="1" />
+                    <VideoClip id="8551065040" ref="1" />
+                    <VideoClip id="8551065030" ref="1" />
+                    <VideoClip id="8551064920" ref="1" />
+                    <VideoClip id="8551066490" ref="1" />
+                    <VideoClip id="8551064520" ref="1" />
+                    <VideoClip id="8551064720" ref="1" />
+                    <VideoClip id="8551064650" ref="1" />
+                    <VideoClip id="8551064560" ref="1" />
+                    <VideoClip id="8551065950" ref="1" />
+                    <VideoClip id="8551066470" ref="1" />
+                    <VideoClip id="8551066440" ref="1" />
+                    <VideoClip id="8551064700" ref="1" />
+                    <VideoClip id="8551064680" ref="1" />
+                    <VideoClip id="8551064620" ref="1" />
+                    <VideoClip id="8551064540" ref="1" />
+                    <VideoClip id="8551065140" ref="1" />
+                    <VideoClip id="8551065100" ref="1" />
+                    <VideoClip id="8551064950" ref="1" />
+                    <VideoClip id="8551064930" ref="1" />
+                    <VideoClip id="8551064750" ref="1" />
+                    <VideoClip id="8551066330" ref="1" />
+                    <VideoClip id="8551066250" ref="1" />
+                    <VideoClip id="8551066240" ref="1" />
+                    <VideoClip id="8551065640" ref="1" />
+                    <VideoClip id="8551065570" ref="1" />
+                    <VideoClip id="8551065560" ref="1" />
+                    <VideoClip id="8551065500" ref="1" />
+                    <VideoClip id="8551065350" ref="1" />
+                    <VideoClip id="8551065230" ref="1" />
+                    <VideoClip id="8551065210" ref="1" />
+                    <VideoClip id="8551066130" ref="1" />
+                    <VideoClip id="8551066110" ref="1" />
+                    <VideoClip id="8551066100" ref="1" />
+                    <VideoClip id="8551065930" ref="1" />
+                    <VideoClip id="8551065920" ref="1" />
+                    <VideoClip id="8551065860" ref="1" />
+                    <VideoClip id="8551065850" ref="1" />
+                    <VideoClip id="8551065750" ref="1" />
+                    <VideoClip id="8551066580" ref="1" />
+                    <VideoClip id="8551065970" ref="1" />
+                    <VideoClip id="8551066310" ref="1" />
+                    <VideoClip id="8551066300" ref="1" />
+                    <VideoClip id="8551066220" ref="1" />
+                    <VideoClip id="8551066500" ref="1" />
+                    <VideoClip id="8551065760" ref="1" />
+                    <VideoClip id="8551065740" ref="1" />
+                    <VideoClip id="8551065550" ref="1" />
+                    <VideoClip id="8551065250" ref="1" />
+                    <VideoClip id="8551065190" ref="1" />
+                    <VideoClip id="8551066550" ref="1" />
+                    <VideoClip id="8551065010" ref="1" />
+                    <VideoClip id="8551064870" ref="1" />
+                    <VideoClip id="8551064840" ref="1" />
+                    <VideoClip id="8551064760" ref="1" />
+                    <VideoClip id="8551064710" ref="1" />
+                    <VideoClip id="8551064660" ref="1" />
+                    <VideoClip id="8551064630" ref="1" />
+                    <VideoClip id="8551066350" ref="1" />
+                </assetClips>
+                <timelineAssets>
+                    <TimelineAsset id="245483" ref="1" />
+                </timelineAssets>
+                <projectBins />
+                <originalContent>
+                    <VideoAssetContent id="21650704" ref="1" />
+                </originalContent>
+                <collectionMemberships>
+                    <AssetCollectionItem id="12298276300" ref="1" />
+                    <AssetCollectionItem id="12298276310" ref="1" />
+                </collectionMemberships>
+                <versions>
+                    <AssetVersion id="24164010" ref="1" />
+                </versions>
+                <project />
+                <thumbnail>
+                    <ImageAssetContent id="21650792" ref="1" />
+                </thumbnail>
+                <proxy>
+                    <VideoAssetContent id="21650784" ref="1" />
+                </proxy>
+                <currentVersion>
+                    <AssetVersion id="24164010" ref="1" />
+                </currentVersion>
+            </VideoAssetMaster>
+        </dependents>
+    </object-collection>
+</response>

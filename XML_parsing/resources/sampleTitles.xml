@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--(c) Copyright ThinkAnalytics Ltd. 2007-2019-->
+<cust id="Crown Media">
+	<titles>
+		<title id="2" name="love by design">
+			<facet name="workingTitle">
+				<feature>Parsed_sample_title_FOO</feature>
+			</facet>
+		</title>
+		<title id="5" name="waterdeep">
+			<facet name="waterdeep title">
+				<feature>waterdeep_sample_title_2</feature>
+			</facet>
+		</title>
+	</titles>
+</cust>
