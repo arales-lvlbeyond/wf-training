@@ -41,14 +41,21 @@
 
     <noopStep name="display number of loops to perform"
               executionLabelExpression="Looping ${numberOfLoops} times"
-              nextStep="begin loop" />
-
-    <noopStep name="begin loop"
-              executionLabelExpression="Loop Interval: ${counter + 1} | Asset Type: ${fileType}"
-              nextStep="show asset information"
+              nextStep="set current asset"
     />
 
-    <setContextData name="show asset information"
+    <setContextData name="set current asset"
+              targetDataDef="currentFile"
+              valueExpression="${subject.items[counter]}"
+              nextStep="begin loop"
+    />
+
+    <noopStep name="begin loop"
+              executionLabelExpression="Loop Interval: ${counter + 1} | Current File: ${currentFile} | Asset Type: ${fileType}"
+              nextStep="counter increment"
+    />
+
+    <setContextData name="counter increment"
                     targetDataDef="counter"
                     valueExpression="${counter + 1}"
     >
@@ -73,7 +80,9 @@
     <contextDataDef name="numberOfLoops" dataType="Integer" defaultDataExpression="${subject.items.size()" />
     <contextDataDef name="totalAssets" dataType="Integer" defaultDataExpression="${subject.items.size()" />
     <contextDataDef name="counter" dataType="Integer" defaultDataExpression="0" />
-    <contextDataDef name="fileType" dataType="String" defaultDataExpression="${subject.items[0].asset.assetType}" />
+    <contextDataDef name="currentFile" dataType="Data Object" defaultDataExpression="${subject.items[counter].asset"/>
+    <contextDataDef name="fileType" dataType="String" defaultDataExpression="${currentFile.asset.assetType}" />
+    <contextDataDef name="metadataTestValueA" dataType="Integer" defaultDataExpression="${currentFile.metadata.testValueA}" />
 
     <!-- ......... PROCESSING ........... -->
 
