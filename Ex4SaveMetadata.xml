@@ -46,6 +46,7 @@
               dataObjectExpression="${subject.metadata}"
               nextStep="end">
 <<<<<<< HEAD
+<<<<<<< HEAD
         <property name="testValueA">${testValueAlpha}</property>
         <property name="testValueA1">${testValueA1}</property>
         <property name="testSinglePicklist">${testSinglePicklistOptions}</property>
@@ -58,6 +59,11 @@
 >>>>>>> initial commit ex4
 =======
         <property name="testValueA">${testValueA}</property>
+=======
+        <property name="testValueA">${testValueAlpha}</property>
+        <property name="testValueA1">${testValueA1}</property>
+        <property name="testSinglePicklist">${testSinglePicklistOptions}</property>
+>>>>>>> single picklist metadata working
     </saveDataObjectStep>
 >>>>>>> adding savedataobject step
     <!-- ................................................... End Steps .................................................... -->
@@ -92,7 +98,16 @@
 =======
     <contextDataDef name="asset" dataType="Data Object" defaultDataExpression="${subject}" />
     <contextDataDef name="assetName" dataType="String" defaultDataExpression="${asset.name}" />
+<<<<<<< HEAD
 >>>>>>> adding savedataobject step
+=======
+
+    <contextDataDef name="testValueAlpha" dataType="Integer" defaultDataExpression="555" />
+
+    <contextDataDef name="testValueA1" dataType="String" defaultDataExpression="Aha!" />
+
+    <contextDataDef name="testSinglePicklistOptions" dataType="String" defaultDataExpression="Item 3" />
+>>>>>>> single picklist metadata working
     <!-- ......... PROCESSING ........... -->
 
 
