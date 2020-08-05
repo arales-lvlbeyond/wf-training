@@ -44,6 +44,7 @@
         <property name="testValueA">${testValueAlpha}</property>
         <property name="testValueA1">${testValueA1}</property>
         <property name="testSinglePicklist">${testSinglePicklistOptions}</property>
+        <property name="testMulitPicklist">${picklistOptionsToAdd}</property>
     </saveDataObjectStep>
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -61,6 +62,11 @@
     <contextDataDef name="testValueA1" dataType="String" defaultDataExpression="Aha!" />
 
     <contextDataDef name="testSinglePicklistOptions" dataType="String" defaultDataExpression="Item 3" />
+
+    <contextDataDef name="currentMultiSelected" dataType="String" defaultDataExpression="${'Multi 2'}" />
+    <contextDataDef name="newMultiValue" dataType="String" defaultDataExpression="Multi 3" />
+    <contextDataDef name="picklistOptionsToAdd" dataType="String" defaultDataExpression="${ newMultiValue + '|' + #joinElements(currentMultiSelected, '|') }" />
+
     <!-- ......... PROCESSING ........... -->
 
 
