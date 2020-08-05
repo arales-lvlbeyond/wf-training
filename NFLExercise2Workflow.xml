@@ -33,6 +33,7 @@
               executionLabelExpression="Collection Name: ${subject.name} , Number of assets: ${subject.items.size().toString()}"
               nextStep="display FirstAsset info"
 <<<<<<< HEAD
+<<<<<<< HEAD
     />
 
     <noopStep name="display FirstAsset info"
@@ -45,6 +46,9 @@
                     nextStep="end" />
 =======
     ></noopStep>
+=======
+    />
+>>>>>>> minor fix
 
     <noopStep name="display FirstAsset info"
 <<<<<<< HEAD
@@ -90,7 +94,7 @@
 =======
     <contextDataDef name="FirstAsset" dataType="Data Object" defaultDataExpression="${subject.items[0].asset}"/>
     <contextDataDef name="metadataTestValueA" dataType="Integer" defaultDataExpression="${FirstAsset.metadata.testValueA}" />
-    <contextDataDef name="FirstAssetFileType" dataType="String" defaultDataExpression="${FirstAsset.itemType}"/>
+    <contextDataDef name="FirstAssetFileType" dataType="String" defaultDataExpression="${FirstAsset.assetType}"/>
 
 
 
