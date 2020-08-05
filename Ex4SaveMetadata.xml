@@ -26,9 +26,23 @@
           sdkVersion=""
 >
 
-    <initialStepName>end</initialStepName>
+    <initialStepName>display asset</initialStepName>
 
-
+    <noopStep name="display asset"
+              executionLabelExpression="Asset: ${asset}"
+              nextStep="asset name"
+    />
+    <noopStep name="asset name"
+              executionLabelExpression="Name: ${assetName}"
+              nextStep="save asset metadata"
+    />
+    
+    <saveDataObjectStep name="save asset metadata"
+              executionLabelExpression="Saving metadata for ${assetName}"
+              dataObjectExpression="${subject.metadata}"
+              nextStep="end">
+        <property name="testValueA">${testValueA}</property>
+    </saveDataObjectStep>
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
     <noopStep name="end"/>
@@ -37,7 +51,8 @@
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
 
-
+    <contextDataDef name="asset" dataType="Data Object" defaultDataExpression="${subject}" />
+    <contextDataDef name="assetName" dataType="String" defaultDataExpression="${asset.name}" />
     <!-- ......... PROCESSING ........... -->
 
 
