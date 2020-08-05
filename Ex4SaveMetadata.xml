@@ -26,6 +26,7 @@
           sdkVersion=""
 >
 
+<<<<<<< HEAD
     <initialStepName>display asset</initialStepName>
 
     <noopStep name="display asset"
@@ -46,6 +47,11 @@
         <property name="testSinglePicklist">${testSinglePicklistOptions}</property>
         <property name="testMulitPicklist">${picklistOptionsToAdd}</property>
     </saveDataObjectStep>
+=======
+    <initialStepName>end</initialStepName>
+
+
+>>>>>>> initial commit ex4
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
     <noopStep name="end"/>
@@ -54,6 +60,7 @@
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
 
+<<<<<<< HEAD
     <contextDataDef name="asset" dataType="Data Object" defaultDataExpression="${subject}" />
     <contextDataDef name="assetName" dataType="String" defaultDataExpression="${asset.name}" />
 
@@ -70,6 +77,8 @@
     <contextDataDef name="oldValues"           dataType="String"           defaultDataExpression="${asset.metadata.testMulitPicklist}" />
     <contextDataDef name="oldValuesReformated" dataType="String"           defaultDataExpression="${oldValues.length() &gt; 1 ? oldValues.substring(1, oldValues.length() - 1).replace(', ', '|') : oldValues}" />
     <contextDataDef name="picklistOptionsToAdd" dataType="String"           defaultDataExpression="${ oldValuesReformated + '|' + #joinElements('Multi 2', '|') }" />
+=======
+>>>>>>> initial commit ex4
 
     <!-- ......... PROCESSING ........... -->
 
