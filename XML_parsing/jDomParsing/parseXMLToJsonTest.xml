@@ -1,0 +1,211 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2019 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://levelsbeyond.com/schema/workflow"
+	xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+	xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+	id="parseXMLToJsonTest"
+	name="JDOM - Parse XML to JSON"
+	executionLabelExpression="Parse XML to JSON"
+	subjectDOClassName=""
+	showInUserInterface="true"
+	sdkVersion="">
+
+	<initialStepName>set xml data def</initialStepName>
+	
+	<setContextData
+		name="set xml data def"
+		targetDataDef="xmlObject"
+		valueExpression="${inputXMLFile}"
+		nextStep="build json"
+		devStep="true"
+	/>
+	
+	<groovyStep name="build json"
+		executionLabelExpression="Building jsons per title node in titles element"
+		resultDataDef="jsonMetadata"
+		nextStep="end"
+	>
+		<script>
+			<![CDATA[
+			import groovy.json.JsonSlurper
+			import java.text.SimpleDateFormat
+			import org.apache.commons.lang3.text.WordUtils
+			import com.levelsbeyond.workflow.sdk.function.GetBaseFilenameFunction
+			import com.levelsbeyond.workflow.sdk.function.GetPicklistValueFunction
+			import com.levelsbeyond.workflow.sdk.function.GetPicklistLabelFunction
+			
+			// Parse XML with jdom and build xmlMapping
+			def xmlMap = [:]
+			
+			def clip = xmlObject.getChild('clip')
+			//clip properties
+			xmlMap.put('title', clip.getChildText('name'))
+			xmlMap.put('totalRuntime', clip.getChildText('duration'))
+			
+			def clipProperties = clip.getChildren()
+			// iterate through each 'properties' node to get add the name and value to the mapping for each property
+			clipProperties.each { properties ->
+				def property = properties.getChild('property')
+				if (property != null) {
+					def key = property.getChildText('name')
+					
+					def val = property.getChildText('value')
+					if (val != null) {
+						xmlMap."$key" = val
+					}
+					xmlMap.put(key, val)
+				}
+			
+			}
+			
+			return xmlMap
+			]]>
+			</script>
+	</groovyStep>
+	
+	<!--<executeSubflowStep name="update metadata for title"-->
+	<!--targetWorkflowId="queryAssetsByHouseCode"-->
+	<!--subjectChangePath="${jsonMetadata}"-->
+	<!--subflowTargetDataDef="titleAssetMetadata"-->
+	<!--nextStep="end"-->
+	<!--/>-->
+	
+	<!-- ................................................... End Steps .................................................... -->
+	<!-- success -->
+	<noopStep name="end" />
+	<!-- ................................................... Data Defs .................................................... -->
+	<!-- ............ INPUT ............. -->
+	<contextDataDef name="inputXMLFile"                     dataType="File"         userInput="true" />
+	<contextDataDef name="inputXMLFilePath"                 dataType="String"       defaultDataExpression="${inputXMLFile?.absolutePath}" />
+	<contextDataDef name="xmlObject"                        dataType="XML"  />
+	
+	<!-- ......... PROCESSING ........... -->
+	<contextDataDef name="jsonMetadata"                     dataType="JSON"     defaultDataExpression="{}"/>
+	
+	<contextDataDef name="testVal"                          dataType="String" />
+
+	<contextDataDef name="jsonMapping" dataType="JSON" >
+        <defaultDataExpression>
+            <![CDATA[
+	{
+	"NFL_REPLACEMENT XML": "",
+	"NFL_AUDIO": "contentDescriptionSecondary",
+	"NFL_BROLL": "contentDescriptionSecondary",
+	"NFL_CONTENT TYPE": "dCLAssetType",
+	"NFL_COURTESY": "courtesy",
+	"NFL_EVENT": "eventType",
+	"NFL_FEATURE": "contentDescriptionSecondary",
+	"NFL_GAME": "contentDescriptionSecondary",
+	"NFL_GAME FEED TYPE": "feedType",
+	"NFL_GSIS GAME ID": "gsisId",
+	"NFL_LTO TAPE": "ltoTape",
+	"NFL_BROADCAST NETWORK": "originalBroadcaster",
+	"NFL_PRODUCER": "producer",
+	"NFL_PROJECT NAME": "networkProjectID",
+	"NFL_SEASON": "season",
+	"NFL_SHOW": "showName",
+	"NFL_SHOW ELEMENT": "studioShowElement",
+	"NFL_SOUND": "contentDescriptionSecondary",
+	"NFL_SPORT": "sport",
+	"NFL_TALENT NAME": "talentName",
+	"NFL_TEAM NFL": "teams",
+	"NFL_WEEK": "week",
+	"NFL_AIRDATE": "dateTimeString",
+	"NFL_TAG": "keywords",
+	"NFL_BOWL NAME": "nCAABowlName",
+	"NFL_BOWL GAME": "nCAABowlGame",
+	"NFL_NCAA CONFERENCE": "conference",
+	"NFL_VENUE": "venueList",
+	"NFL_SOCIAL_PLATFORM": "publishedTo",
+	"NFL_TEAM NON-NFL": "otherTeams",
+	"Description": "programDescription",
+	"NFL_QC": "nFLNetworkQC",
+	"COMBINE_40_YD_DASH_1": "combine40YardDash1",
+	"COMBINE_40_YD_DASH_2": "combine40YardDash2",
+	"COMBINE_40_YD_DASH_OVERALL": "combine40YardDashOverall",
+	"COMBINE_ARM_LENGTH": "combineArmLength",
+	"COMBINE_BENCH_PRESS": "combineBenchPress",
+	"COMBINE_BROAD_JUMP": "combineBroadJump",
+	"COMBINE_EVENT": "combineEvent",
+	"COMBINE_GROUP": "combineGroup",
+	"COMBINE_HAND_SIZE": "combineHandSize",
+	"COMBINE_HEIGHT": "combineHeight",
+	"COMBINE_POSITION": "combinePosition",
+	"COMBINE_POSITION": "combineShuttle20Yard",
+	"COMBINE_SHUTTLE_3_CONE": "combineShuttle3Cone",
+	"COMBINE_SHUTTLE_60_YD": "combineShuttle60Yard",
+	"COMBINE_VERTICAL_JUMP": "combineVerticalJump",
+	"COMBINE_WEIGHT": "combineWeight",
+	"NFL_AUDIO MAPPING CH-1": "audioMappingChannel1",
+	"NFL_AUDIO MAPPING CH-2": "audioMappingChannel2",
+	"NFL_AUDIO MAPPING CH-3": "audioMappingChannel3",
+	"NFL_AUDIO MAPPING CH-4": "audioMappingChannel4",
+	"NFL_AUDIO MAPPING CH-5": "audioMappingChannel5",
+	"NFL_AUDIO MAPPING CH-6": "audioMappingChannel6",
+	"NFL_AUDIO MAPPING CH-7": "audioMappingChannel7",
+	"NFL_AUDIO MAPPING CH-8": "audioMappingChannel8",
+	"NFL_CLEARANCE": "clearance",
+	"NFL_COMP REEL #": "compReelNumber",
+	"NFL_DRAFT PICK NUMBER": "draftPickNumber",
+	"NFL_DRAFT ROUND": "draftRound",
+	"NFL_HEADLINE": "headline",
+	"NFL_MUSIC GENRE": "musicGenre",
+	"NFL_MUSIC LIBRARY": "musicLibrary",
+	"NFL_MUSIC PROJECT ID": "musicProjectID",
+	"NFL_NCAA COURTESY": "nCAACourtesy",
+	"NFL_PUBLICATION": "publication",
+	"NFL_SOCIAL_BODY": "socialBody",
+	"NFL_SOCIAL_DATE": "socialDate",
+	"NFL_SOCIAL_HANDLE": "socialHandle",
+	"NFL_SOCIAL_NAME": "socialName",
+	"NFL_STILLS": "contentDescriptionSecondary",
+	"NGS_AIR YARDS": "airYards",
+	"NGS_AWAY PLAYERS": "",
+	"NGS_BALL CARRIER": "",
+	"NGS_COMPARATIVE STATS": "",
+	"NGS_DISTANCE": "",
+	"NGS_DOWN": "down",
+	"NGS_FIRST DOWN": "",
+	"NGS_FORMATION": "formation",
+	"NGS_FUMBLE FORCED BY": "",
+	"NGS_FUMBLE RECOVERED BY": "",
+	"NGS_GAME CLOCK": "gameClock",
+	"NGS_GOAL TO GO": "",
+	"NGS_HANG TIME": "handTime",
+	"NGS_HOME PLAYERS": "",
+	"NGS_INTERCEPTED BY": "",
+	"NGS_KICK DISTANCE": "",
+	"NGS_KICKER": "",
+	"NGS_PLAY ID": "playNumber",
+	"NGS_PLAY TYPE": "playType",
+	"NGS_POSSESSION TEAM": "possessionTeam",
+	"NGS_QUARTER": "quarter",
+	"NGS_QUARTERBACK": "",
+	"NGS_REDZONE": "",
+	"NGS_SACK YARDS": "",
+	"NGS_SCORING PLAY": "scoringPlayType",
+	"NGS_TACKLED BY": "",
+	"NGS_YAC": "yardsGainedAfterCatch",
+	"NGS_YARDS": ""
+		}
+            ]]>
+        </defaultDataExpression>
+    </contextDataDef>
+ 
+ 
+</workflow>

@@ -1,0 +1,107 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://levelsbeyond.com/schema/workflow"
+	xsi:schemaLocation="
+		http://levelsbeyond.com/schema/latest
+		https://s3-us-west-2.amazonaws.com/schema.levelsbeyond.com/2.3.16.17962/studio.xsd
+	"
+	id="readXMLFile"
+	name="readXMLFile"
+	executionLabelExpression="readXMLFile | "
+	subjectDOClassName=""
+	showInUserInterface="true"
+	sdkVersion="">
+
+	<initialStepName>eval def</initialStepName>
+	
+	<groovyStep name="eval def"
+		resultDataDef="testVal"
+		nextStep="end"
+	>
+		<script>
+			return true
+		</script>
+	</groovyStep>
+	
+	<groovyStep name="read xml"
+		resultDataDef="result"
+		nextStep="end"
+	>
+		<script>
+			<![CDATA[
+			import javax.xml.parsers.DocumentBuilderFactory
+			import javax.xml.parsers.DocumentBuilder
+			import org.w3c.dom.Document
+			import org.w3c.dom.NodeList
+			import org.w3c.dom.Node
+			import org.w3c.dom.Element
+			import java.io.File
+			
+			File fXmlFile = new File(xmlFileToRead)
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance()
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder()
+			Document doc = dBuilder.parse(fXmlFile)
+			
+			doc.getDocumentElement().normalize()
+			
+			NodeList nList = doc.getElementsByTagName("IndexerReport")
+			
+			Node nNode = nList.item(0)
+			
+			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+				Element eElement = (Element) nNode
+				
+				return eElement.getAttribute("FileStartTC")
+			}
+			]]>
+		</script>
+	</groovyStep>
+	<!-- ................................................... End Steps .................................................... -->
+	<!-- success -->
+	<noopStep name="end" />
+	<!-- ................................................... Data Defs .................................................... -->
+	<!-- ............ INPUT ............. -->
+	<!--<contextDataDef name="xmlFileToRead"                    dataType="File"             userInput="true" />-->
+	<!-- ......... PROCESSING ........... -->
+	<contextDataDef name="result"                           dataType="String" />
+	<contextDataDef name="xml"                              dataType="XML">
+		<defaultDataExpression>
+			<![CDATA[
+				<cust id="Crown Media">
+					<titles>
+						<title id="2" name="love by design">
+							<facet name="workingTitle">
+								<feature>Parsed_sample_title_FOO</feature>
+							</facet>
+						</title>
+						<title id="5" name="waterdeep">
+							<facet name="waterdeep title">
+								<feature>waterdeep_sample_title_2</feature>
+							</facet>
+						</title>
+					</titles>
+				</cust>
+			]]>
+		</defaultDataExpression>
+	</contextDataDef>
+	<contextDataDef name="xmlNodeVal"                          dataType="String"               defaultDataExpression="${xml.getChild('titles')?.getChildren()[0].getAttributeValue('name')}" />
+	
+	<contextDataDef name="testVal"              dataType="Boolean" />
+  
+    
+</workflow>
