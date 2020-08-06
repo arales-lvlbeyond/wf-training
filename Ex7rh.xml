@@ -21,7 +21,7 @@
           id="Ex7rh"
           name="Ex7rh"
           executionLabelExpression="Ex7rh | "
-          subjectDOClassName="AssetMaster"
+          subjectDOClassName="AssetCollection"
           showInUserInterface="true"
           sdkVersion=""
 >
@@ -30,19 +30,27 @@
 
     <noopStep name="asset collection"
               executionLabelExpression="the ${subject}"
-              nextStep="any asset subflow"
+              nextStep="display asset info"
     />
 
-    <executeSubflowStep name="any asset subflow"
-                        targetWorkflowId="_createProxiesAnyAsset"
-                        subjectChangePath="${assetMaster}"
-                        executionLabelExpression="display asset information for ${assetName}"
-                        nextStep="display data"
-                        >
-<!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
-    </executeSubflowStep>
 
-    <noopStep name="display data" executionLabelExpression="Asset mezzanine: ${subject.mezzanine}" nextStep="end" />
+    <executeSubflowStep name="display asset info"
+                        targetWorkflowId="Ex7Subflowrh"
+                        subjectChangePath="${assetCollectionArray}"
+                        nextStep="end"
+                        >
+
+    </executeSubflowStep>
+<!--    <executeSubflowStep name="any asset subflow"-->
+<!--                        targetWorkflowId="_createProxiesAnyAsset"-->
+<!--                        subjectChangePath="${assetMaster}"-->
+<!--                        executionLabelExpression="display asset information for ${assetName}"-->
+<!--                        nextStep="display data"-->
+<!--                        >-->
+<!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
+<!--    </executeSubflowStep>-->
+
+<!--    <noopStep name="display data" executionLabelExpression="Asset mezzanine: ${subject.mezzanine}" nextStep="end" />-->
 
 
     <!-- ................................................... End Steps .................................................... -->
@@ -52,7 +60,8 @@
 
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
-    <contextDataDef name="assetMaster" dataType="Data Object" defaultDataExpression="${subject}" />
+    <contextDataDef name="assetCollectionArray" dataType="Data Object" multiple="true" defaultDataExpression="${assetCollection.items.![asset]}" />
+    <contextDataDef name="assetCollection" dataType="Data Object" defaultDataExpression="${subject}" />
     <contextDataDef name="assetName"   dataType="String"      defaultDataExpression="${assetMaster.name" />
     <contextDataDef name="mezzFile"    dataType="File"        defaultDataExpression="${assetMaster.mezzanine}" />
 
