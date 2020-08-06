@@ -63,9 +63,13 @@
 
     <contextDataDef name="testSinglePicklistOptions" dataType="String" defaultDataExpression="Item 3" />
 
-    <contextDataDef name="currentMultiSelected" dataType="String" defaultDataExpression="${'Multi 2'}" />
-    <contextDataDef name="newMultiValue" dataType="String" defaultDataExpression="Multi 3" />
-    <contextDataDef name="picklistOptionsToAdd" dataType="String" defaultDataExpression="${ newMultiValue + '|' + #joinElements(currentMultiSelected, '|') }" />
+    <contextDataDef name="currentMultiSelected" dataType="String" defaultDataExpression="${asset.metadata.testMulitPicklist}" />
+    <contextDataDef name="newMultiValue" dataType="String" defaultDataExpression="${#picklistValue('testMulitPicklist', 'Multi 1', )}" />
+<!--    <contextDataDef name="picklistOptionsToAdd" dataType="String" defaultDataExpression="${ newMultiValue + '|' + #joinElements(currentMultiSelected, '|') }" />-->
+
+    <contextDataDef name="oldValues"           dataType="String"           defaultDataExpression="${asset.metadata.testMulitPicklist}" />
+    <contextDataDef name="oldValuesReformated" dataType="String"           defaultDataExpression="${oldValues.length() &gt; 1 ? oldValues.substring(1, oldValues.length() - 1).replace(', ', '|') : oldValues}" />
+    <contextDataDef name="picklistOptionsToAdd" dataType="String"           defaultDataExpression="${ oldValuesReformated + '|' + #joinElements('Multi 2', '|') }" />
 
     <!-- ......... PROCESSING ........... -->
 
