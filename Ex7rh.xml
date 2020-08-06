@@ -29,6 +29,7 @@
     <initialStepName>asset collection</initialStepName>
 
     <noopStep name="asset collection"
+<<<<<<< HEAD
               executionLabelExpression="Collection: ${subject.name}"
               nextStep="display asset info"
     />
@@ -44,6 +45,23 @@
 
 
 
+=======
+              executionLabelExpression="the ${subject}"
+              nextStep="any asset subflow"
+    />
+
+    <executeSubflowStep name="any asset subflow"
+                        targetWorkflowId="_createProxiesAnyAsset"
+                        subjectChangePath="${assetMaster}"
+                        subflowTargetDataDef="asset"
+                        executionLabelExpression="display asset information for ${assetMaster}"
+                        nextStep="end"
+                        >
+        <subflowContextDataMapping parentDataDef="${assetName}" subflowDataDef=""/>
+    </executeSubflowStep>
+
+
+>>>>>>> initial workflow setup for subflow
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
     <noopStep name="end"/>
@@ -51,9 +69,13 @@
 
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
+<<<<<<< HEAD
     <contextDataDef name="assetCollectionArray" dataType="Data Object" multiple="true" defaultDataExpression="${assetCollection.items.![asset]}" />
     <contextDataDef name="assetCollection" dataType="Data Object" defaultDataExpression="${subject}" />
 
+=======
+    <contextDataDef name="assetName" dataType="Data Object" defaultDataExpression="" />
+>>>>>>> initial workflow setup for subflow
 
     <!-- ......... PROCESSING ........... -->
 
