@@ -29,7 +29,7 @@
     <initialStepName>asset collection</initialStepName>
 
     <noopStep name="asset collection"
-              executionLabelExpression="the ${subject}"
+              executionLabelExpression="Collection: ${subject.name}"
               nextStep="display asset info"
     />
 
@@ -41,16 +41,7 @@
                         >
 
     </executeSubflowStep>
-<!--    <executeSubflowStep name="any asset subflow"-->
-<!--                        targetWorkflowId="_createProxiesAnyAsset"-->
-<!--                        subjectChangePath="${assetMaster}"-->
-<!--                        executionLabelExpression="display asset information for ${assetName}"-->
-<!--                        nextStep="display data"-->
-<!--                        >-->
-<!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
-<!--    </executeSubflowStep>-->
 
-<!--    <noopStep name="display data" executionLabelExpression="Asset mezzanine: ${subject.mezzanine}" nextStep="end" />-->
 
 
     <!-- ................................................... End Steps .................................................... -->
