@@ -21,10 +21,14 @@
           id="Ex7Subflowrh"
           name="Ex7Subflowrh"
 <<<<<<< HEAD
+<<<<<<< HEAD
           executionLabelExpression="Ex7Subflowrh | ${assetMaster.name} | ${assetMaster.assetType} "
 =======
           executionLabelExpression="Ex7Subflowrh | "
 >>>>>>> reworking ex 7
+=======
+          executionLabelExpression="Ex7Subflowrh | ${assetMaster.name} | ${assetMaster.assetType} "
+>>>>>>> metadata field displaying in subflow
           subjectDOClassName="AssetMaster"
           showInUserInterface="true"
           sdkVersion=""
@@ -33,6 +37,7 @@
     <initialStepName>display asset information</initialStepName>
 
     <noopStep name="display asset information"
+<<<<<<< HEAD
 <<<<<<< HEAD
               executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType} | ${testValueA}"
               nextStep="any asset subflow"
@@ -50,11 +55,26 @@
 
 =======
               executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType}"
+=======
+              executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType} | ${testValueA}"
+>>>>>>> metadata field displaying in subflow
               nextStep="end"
     />
 
     <!--TODO: call another subflow for mezz-->
+<<<<<<< HEAD
 >>>>>>> reworking ex 7
+=======
+<!--    <executeSubflowStep name="any asset subflow"-->
+<!--                        targetWorkflowId="_createProxiesAnyAsset"-->
+<!--                        subjectChangePath="${assetMaster}"-->
+<!--                        executionLabelExpression="create mezz for ${assetName}"-->
+<!--                        nextStep="end"-->
+<!--    >-->
+<!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
+<!--    </executeSubflowStep>-->
+
+>>>>>>> metadata field displaying in subflow
 
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -67,11 +87,16 @@
 
     <!-- ......... PROCESSING ........... -->
 <<<<<<< HEAD
+<<<<<<< HEAD
     <contextDataDef name="assetMaster"              dataType="Data Object"          defaultDataExpression="${subject}" />
     <contextDataDef name="testValueA"               dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
     <contextDataDef name="mezzFile"                 dataType="File"           />
 =======
     <contextDataDef name="assetMaster" dataType="Data Object" defaultDataExpression="${subject}" />
+=======
+    <contextDataDef name="assetMaster"              dataType="Data Object"          defaultDataExpression="${subject}" />
+    <contextDataDef name="testValueA"           dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
+>>>>>>> metadata field displaying in subflow
 
 >>>>>>> reworking ex 7
 </workflow>

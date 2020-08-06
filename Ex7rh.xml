@@ -30,6 +30,7 @@
 
     <noopStep name="asset collection"
 <<<<<<< HEAD
+<<<<<<< HEAD
               executionLabelExpression="Collection: ${subject.name}"
               nextStep="display asset info"
     />
@@ -47,6 +48,9 @@
 
 =======
               executionLabelExpression="the ${subject}"
+=======
+              executionLabelExpression="Collection: ${subject.name}"
+>>>>>>> metadata field displaying in subflow
               nextStep="display asset info"
     />
 
@@ -58,16 +62,7 @@
                         >
 
     </executeSubflowStep>
-<!--    <executeSubflowStep name="any asset subflow"-->
-<!--                        targetWorkflowId="_createProxiesAnyAsset"-->
-<!--                        subjectChangePath="${assetMaster}"-->
-<!--                        executionLabelExpression="display asset information for ${assetName}"-->
-<!--                        nextStep="display data"-->
-<!--                        >-->
-<!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
-<!--    </executeSubflowStep>-->
 
-<!--    <noopStep name="display data" executionLabelExpression="Asset mezzanine: ${subject.mezzanine}" nextStep="end" />-->
 
 
 >>>>>>> initial workflow setup for subflow
