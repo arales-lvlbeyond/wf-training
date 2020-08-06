@@ -20,7 +20,7 @@
           xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
           id="Ex7Subflowrh"
           name="Ex7Subflowrh"
-          executionLabelExpression="Ex7Subflowrh | "
+          executionLabelExpression="Ex7Subflowrh | ${assetMaster.name} | ${assetMaster.assetType} "
           subjectDOClassName="AssetMaster"
           showInUserInterface="true"
           sdkVersion=""
@@ -29,11 +29,20 @@
     <initialStepName>display asset information</initialStepName>
 
     <noopStep name="display asset information"
-              executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType}"
+              executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType} | ${testValueA}"
               nextStep="end"
     />
 
     <!--TODO: call another subflow for mezz-->
+<!--    <executeSubflowStep name="any asset subflow"-->
+<!--                        targetWorkflowId="_createProxiesAnyAsset"-->
+<!--                        subjectChangePath="${assetMaster}"-->
+<!--                        executionLabelExpression="create mezz for ${assetName}"-->
+<!--                        nextStep="end"-->
+<!--    >-->
+<!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
+<!--    </executeSubflowStep>-->
+
 
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -45,6 +54,7 @@
 
 
     <!-- ......... PROCESSING ........... -->
-    <contextDataDef name="assetMaster" dataType="Data Object" defaultDataExpression="${subject}" />
+    <contextDataDef name="assetMaster"              dataType="Data Object"          defaultDataExpression="${subject}" />
+    <contextDataDef name="testValueA"           dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
 
 </workflow>
