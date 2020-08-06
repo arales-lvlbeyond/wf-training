@@ -21,7 +21,7 @@
           id="Ex7rh"
           name="Ex7rh"
           executionLabelExpression="Ex7rh | "
-          subjectDOClassName="AssetCollection"
+          subjectDOClassName="AssetMaster"
           showInUserInterface="true"
           sdkVersion=""
 >
@@ -36,12 +36,13 @@
     <executeSubflowStep name="any asset subflow"
                         targetWorkflowId="_createProxiesAnyAsset"
                         subjectChangePath="${assetMaster}"
-                        subflowTargetDataDef="asset"
-                        executionLabelExpression="display asset information for ${assetMaster}"
-                        nextStep="end"
+                        executionLabelExpression="display asset information for ${assetName}"
+                        nextStep="display data"
                         >
-        <subflowContextDataMapping parentDataDef="${assetName}" subflowDataDef=""/>
+<!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
     </executeSubflowStep>
+
+    <noopStep name="display data" executionLabelExpression="Asset mezzanine: ${subject.mezzanine}" nextStep="end" />
 
 
     <!-- ................................................... End Steps .................................................... -->
@@ -51,7 +52,9 @@
 
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
-    <contextDataDef name="assetName" dataType="Data Object" defaultDataExpression="" />
+    <contextDataDef name="assetMaster" dataType="Data Object" defaultDataExpression="${subject}" />
+    <contextDataDef name="assetName"   dataType="String"      defaultDataExpression="${assetMaster.name" />
+    <contextDataDef name="mezzFile"    dataType="File"        defaultDataExpression="${assetMaster.mezzanine}" />
 
     <!-- ......... PROCESSING ........... -->
 
