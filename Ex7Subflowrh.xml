@@ -20,7 +20,11 @@
           xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
           id="Ex7Subflowrh"
           name="Ex7Subflowrh"
+<<<<<<< HEAD
           executionLabelExpression="Ex7Subflowrh | ${assetMaster.name} | ${assetMaster.assetType} "
+=======
+          executionLabelExpression="Ex7Subflowrh | "
+>>>>>>> reworking ex 7
           subjectDOClassName="AssetMaster"
           showInUserInterface="true"
           sdkVersion=""
@@ -29,6 +33,7 @@
     <initialStepName>display asset information</initialStepName>
 
     <noopStep name="display asset information"
+<<<<<<< HEAD
               executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType} | ${testValueA}"
               nextStep="any asset subflow"
     />
@@ -43,6 +48,13 @@
 
     </executeSubflowStep>
 
+=======
+              executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType}"
+              nextStep="end"
+    />
+
+    <!--TODO: call another subflow for mezz-->
+>>>>>>> reworking ex 7
 
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -54,7 +66,12 @@
 
 
     <!-- ......... PROCESSING ........... -->
+<<<<<<< HEAD
     <contextDataDef name="assetMaster"              dataType="Data Object"          defaultDataExpression="${subject}" />
     <contextDataDef name="testValueA"               dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
     <contextDataDef name="mezzFile"                 dataType="File"           />
+=======
+    <contextDataDef name="assetMaster" dataType="Data Object" defaultDataExpression="${subject}" />
+
+>>>>>>> reworking ex 7
 </workflow>
