@@ -27,7 +27,7 @@
 
     <initialStepName>query for assets</initialStepName>
     <queryStep name="query for assets"
-               executionLabelExpression="Number of assets in Collection: ${Assets.size()}"
+               executionLabelExpression="Number of assets in Collection: ${foundAssets.size()}"
                targetDataObjectClass="AssetMaster"
                resultDataDef="foundAssets"
                nextStep="end">

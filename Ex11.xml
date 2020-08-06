@@ -18,45 +18,49 @@
           xmlns="http://levelsbeyond.com/schema/workflow"
           xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
           xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
-          id="Ex9_gw"
-          name="Ex9_gw"
-          executionLabelExpression="Ex9_gw | "
+          id="Ex11_gw"
+          name="Ex11_gw"
+          executionLabelExpression="Ex11_gw | "
           subjectDOClassName="AssetCollection"
           showInUserInterface="true"
           sdkVersion=""
-          description="Checks if collection contains testSinglePicklist with 'Option A'">
-
-
-    <initialStepName>query for assets</initialStepName>
-
-
+>
 
     <initialStepName>query for assets</initialStepName>
     <queryStep name="query for assets"
                executionLabelExpression="Number of assets in Collection: ${Assets.size()}"
                targetDataObjectClass="AssetMaster"
                resultDataDef="foundAssets"
-               nextStep="end">
+               nextStep="filter assets">
 
         <criteria>
             <![CDATA[
                 <criteria>
                    <and>
-                      <condition property="metadata.testSinglePicklist"  op="eq">
-                         <test value="${#picklistValue('testSinglePicklist', 'Option A', )}" />
-                      </condition>
+                      <condition property="metadata.testValueA1" op="notnull"/>
                    </and>
                 </criteria>
             ]]>
         </criteria>
     </queryStep>
 
+    <setContextData name="filter assets"
+                    targetDataDef="filteredAsset"
+                    valueExpression="${foundAssets.?[metadata.testValueA1.equals('yarg!')]}"
+    nextStep="end"/>
+
     <!-- success -->
     <noopStep name="end"/>
 
-    <contextDataDef name="Assets"      dataType="Data Object" multiple="true" defaultDataExpression="${subject.items.![asset]}"/>
-    <contextDataDef name="foundAssets" dataType="Data Object" multiple="true"/>
-    <contextDataDef name="meta"        dataType="String"      defaultDataExpression="${Assets[0].metadata.testSinglePicklist}"/>
+    <!-- ................................................... Data Defs .................................................... -->
+    <contextDataDef name="filteredAsset" dataType="String"      multiple="true"/>
+    <contextDataDef name="Assets"        dataType="Data Object" multiple="true" defaultDataExpression="${subject.items.![asset]}"/>
+    <contextDataDef name="foundAssets"   dataType="Data Object" multiple="true"/>
+
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+
 
 
     <!-- ................................................... Data Defs .................................................... -->
