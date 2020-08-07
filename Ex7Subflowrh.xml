@@ -57,6 +57,7 @@
               executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType}"
 =======
               executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType} | ${testValueA}"
+<<<<<<< HEAD
 >>>>>>> metadata field displaying in subflow
               nextStep="end"
     />
@@ -73,6 +74,20 @@
 <!--    >-->
 <!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
 <!--    </executeSubflowStep>-->
+=======
+              nextStep="any asset subflow"
+    />
+
+    <!--TODO: call another subflow for mezz-->
+    <executeSubflowStep name="any asset subflow"
+                        targetWorkflowId="_createProxiesAnyAsset"
+                        subjectChangePath="${assetMaster}"
+                        executionLabelExpression="create mezz for ${assetName}"
+                        nextStep="end"
+    >
+
+    </executeSubflowStep>
+>>>>>>> ex7 fully working
 
 >>>>>>> metadata field displaying in subflow
 
@@ -95,8 +110,13 @@
     <contextDataDef name="assetMaster" dataType="Data Object" defaultDataExpression="${subject}" />
 =======
     <contextDataDef name="assetMaster"              dataType="Data Object"          defaultDataExpression="${subject}" />
+<<<<<<< HEAD
     <contextDataDef name="testValueA"           dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
 >>>>>>> metadata field displaying in subflow
 
 >>>>>>> reworking ex 7
+=======
+    <contextDataDef name="testValueA"               dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
+    <contextDataDef name="mezzFile"                 dataType="File"           />
+>>>>>>> ex7 fully working
 </workflow>

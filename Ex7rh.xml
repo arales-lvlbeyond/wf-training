@@ -87,10 +87,14 @@
 =======
     <contextDataDef name="assetCollectionArray" dataType="Data Object" multiple="true" defaultDataExpression="${assetCollection.items.![asset]}" />
     <contextDataDef name="assetCollection" dataType="Data Object" defaultDataExpression="${subject}" />
+<<<<<<< HEAD
 >>>>>>> reworking ex 7
     <contextDataDef name="assetName"   dataType="String"      defaultDataExpression="${assetMaster.name" />
     <contextDataDef name="mezzFile"    dataType="File"        defaultDataExpression="${assetMaster.mezzanine}" />
 >>>>>>> subflow executing, trying to grab mezzanine
+=======
+
+>>>>>>> ex7 fully working
 
     <!-- ......... PROCESSING ........... -->
 
