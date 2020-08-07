@@ -53,8 +53,7 @@
     <!-- ............ INPUT ............. -->
     <contextDataDef name="assetCollectionArray" dataType="Data Object" multiple="true" defaultDataExpression="${assetCollection.items.![asset]}" />
     <contextDataDef name="assetCollection" dataType="Data Object" defaultDataExpression="${subject}" />
-    <contextDataDef name="assetName"   dataType="String"      defaultDataExpression="${assetMaster.name" />
-    <contextDataDef name="mezzFile"    dataType="File"        defaultDataExpression="${assetMaster.mezzanine}" />
+
 
     <!-- ......... PROCESSING ........... -->
 
