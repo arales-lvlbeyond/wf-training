@@ -21,14 +21,13 @@
           id="Ex11_gw"
           name="Ex11_gw"
           executionLabelExpression="Ex11_gw | "
-          subjectDOClassName="AssetCollection"
+          subjectDOClassName=""
           showInUserInterface="true"
-          sdkVersion=""
->
+          sdkVersion="">
 
     <initialStepName>query for assets</initialStepName>
     <queryStep name="query for assets"
-               executionLabelExpression="Number of assets in Collection: ${Assets.size()}"
+               executionLabelExpression="Number of assets in Collection: ${foundAssets.size()}"
                targetDataObjectClass="AssetMaster"
                resultDataDef="foundAssets"
                nextStep="filter assets">
@@ -46,15 +45,12 @@
 
     <setContextData name="filter assets"
                     targetDataDef="filteredAsset"
-                    valueExpression="${foundAssets.?[metadata.testValueA1.equals('yarg!')]}"
+                    valueExpression="${foundAssets.?[metadata.testValueA1.length() &gt; 10]}"
     nextStep="end"/>
-
     <!-- success -->
     <noopStep name="end"/>
-
     <!-- ................................................... Data Defs .................................................... -->
     <contextDataDef name="filteredAsset" dataType="String"      multiple="true"/>
-    <contextDataDef name="Assets"        dataType="Data Object" multiple="true" defaultDataExpression="${subject.items.![asset]}"/>
     <contextDataDef name="foundAssets"   dataType="Data Object" multiple="true"/>
 
 
