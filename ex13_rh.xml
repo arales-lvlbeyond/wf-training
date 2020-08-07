@@ -54,7 +54,7 @@
 
     <failWorkflowStep name="failed http req"
                       executionLabelExpression="http request failed: ${apiRequest}"
-                      reasonExpression="http request failed: ${apiRequest} | ${responseCode}" />
+                      reasonExpression="http request failed: ${apiRequest}" />
 
 
     <!-- ................................................... End Steps .................................................... -->
