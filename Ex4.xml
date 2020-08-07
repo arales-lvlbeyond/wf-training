@@ -24,7 +24,7 @@
           subjectDOClassName="AssetMaster"
           showInUserInterface="true"
           sdkVersion="">
-
+#
 
     <initialStepName>save asset metadata</initialStepName>
     <!-- update testMulitPicklist metadata field -->
