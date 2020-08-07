@@ -32,8 +32,7 @@
                executionLabelExpression="Number of assets found: ${foundAssets.size()}"
                targetDataObjectClass="AssetMaster"
                resultDataDef="foundAssets"
-               fetchLimitExpression="10"
-               nextStep="end">
+               nextStep="set found asset names">
 
         <criteria>
             <![CDATA[
@@ -51,6 +50,12 @@
         </criteria>
     </queryStep>
 
+    <setContextData name="set found asset names"
+                    targetDataDef="foundAssetNames"
+                    valueExpression="${foundAssets.![name]}"
+                    nextStep="end"
+    />
+
 
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -63,5 +68,6 @@
 
     <!-- ......... PROCESSING ........... -->
     <contextDataDef name="foundAssets"      dataType="Data Object"  multiple="true" />
+    <contextDataDef name="foundAssetNames" dataType="String" multiple="true" defaultDataExpression="${foundAssets.![name]" />
 
 </workflow>
