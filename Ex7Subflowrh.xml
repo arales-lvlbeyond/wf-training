@@ -30,18 +30,18 @@
 
     <noopStep name="display asset information"
               executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType} | ${testValueA}"
-              nextStep="end"
+              nextStep="any asset subflow"
     />
 
     <!--TODO: call another subflow for mezz-->
-<!--    <executeSubflowStep name="any asset subflow"-->
-<!--                        targetWorkflowId="_createProxiesAnyAsset"-->
-<!--                        subjectChangePath="${assetMaster}"-->
-<!--                        executionLabelExpression="create mezz for ${assetName}"-->
-<!--                        nextStep="end"-->
-<!--    >-->
-<!--        <subflowContextDataMapping parentDataDef="mezzFile" subflowDataDef="mezzFile"/>-->
-<!--    </executeSubflowStep>-->
+    <executeSubflowStep name="any asset subflow"
+                        targetWorkflowId="_createProxiesAnyAsset"
+                        subjectChangePath="${assetMaster}"
+                        executionLabelExpression="create mezz for ${assetName}"
+                        nextStep="end"
+    >
+
+    </executeSubflowStep>
 
 
     <!-- ................................................... End Steps .................................................... -->
@@ -55,6 +55,6 @@
 
     <!-- ......... PROCESSING ........... -->
     <contextDataDef name="assetMaster"              dataType="Data Object"          defaultDataExpression="${subject}" />
-    <contextDataDef name="testValueA"           dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
-
+    <contextDataDef name="testValueA"               dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
+    <contextDataDef name="mezzFile"                 dataType="File"           />
 </workflow>
