@@ -33,7 +33,6 @@
                executionLabelExpression="Number of assets found: ${foundAssets.size()}"
                targetDataObjectClass="AssetMaster"
                resultDataDef="foundAssets"
-               fetchLimitExpression="10"
                nextStep="filter assets">
 
         <criteria>
