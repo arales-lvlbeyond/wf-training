@@ -1,0 +1,77 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="ex14_rh"
+          name="ex14_rh"
+          executionLabelExpression="ex14_rh | "
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>Parse json</initialStepName>
+    <groovyStep name="Parse json"
+                resultDataDef="result"
+                executionLabelExpression="Creating CSV file with metadata: ${result.absolutePath}"
+                nextStep="end"
+                >
+        <script>
+            <![CDATA[
+                import com.csvreader.CsvWriter
+                import java.io.File
+                import java.text.SimpleDateFormat
+                import com.routeto1.filesystem.FileWrapperUtils
+
+                char delimiter = ','
+
+                // Initialize output csv
+			CsvWriter outputCsv = new CsvWriter(new FileWriter(result.absolutePath, true), delimiter)
+
+            outputCsv.write('Field Name')
+            outputCsv.write('Display Name')
+            outputCsv.endRecord()
+
+            inputJson.rows.each{ field ->
+                outputCsv.write(field.name.asText())
+                outputCsv.write(field.displayName.asText())
+                outputCsv.endRecord()
+            }
+            outputCsv.close()
+
+
+            return result
+
+            ]]>
+        </script>
+    </groovyStep>
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+
+
+    <!-- ................................................... Data Defs .................................................... -->
+    <!-- ............ INPUT ............. -->
+    <contextDataDef name="inputJson" dataType="JSON" />
+
+    <!-- ......... PROCESSING ........... -->
+    <contextDataDef name="result" dataType="File" defaultDataExpression="/reachengine/media/testCSV/RHTestCsv2.csv" />
+
+</workflow>
