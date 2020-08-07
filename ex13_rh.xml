@@ -34,13 +34,29 @@
                     requestMethodExpression="GET"
                     responsePayloadDataDef="jsonMetadata"
                     executionLabelExpression="Retrieving list of all metadata properties"
-                    nextStep="end"
+                    responseCodeDataDef="responseCode"
+                    nextStep="response successful check"
 
                     >
         <requestHeader name="auth_user">${user}</requestHeader>
         <requestHeader name="auth_password">${password}</requestHeader>
         <requestHeader name="Content-Type">application/json</requestHeader>
     </submitHttpStep>
+
+
+    <noopStep name="response successful check">
+        <transition condition="${responseCode == 200}" >
+            <targetStepName>success</targetStepName>
+        </transition>
+        <transition condition="${true}">
+            <targetStepName>failed http req</targetStepName>
+        </transition>
+    </noopStep>
+
+    <failWorkflowStep name="failed http req"
+                      executionLabelExpression="http request failed: ${apiRequest}"
+                      reasonExpression="http request failed: ${apiRequest} | ${responseCode}" />
+
 
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
@@ -53,5 +69,9 @@
 
     <!-- ......... PROCESSING ........... -->
     <contextDataDef name="jsonMetadata" dataType="JSON" />
+    <contextDataDef name="user" dataType="String" defaultDataExpression="user" />
+    <contextDataDef name="password" dataType="String" defaultDataExpression="password" />
+    <contextDataDef name="response code" dataType="Integer" />
+    <contextDataDef name="apiRequest" dataType="String" defaultDataExpression="https://re23x.levelsbeyond.com/reachengine/api/metadata-properties?includeArchived=false&editOnly=false&viewOnly=false&inspectorOnly=false&sortDirection=ASC"/>
 
 </workflow>
