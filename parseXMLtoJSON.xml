@@ -38,39 +38,38 @@
                     // Parse XML with jdom and build xmlMapping
                     def xmlMap = [:]
 
-                    //Get Media Owner?
-                    //def cust = xmlFile.getChild('cust')
-
                     //add cust ID
-                    //xmlMap.put("id",cust.getAttributeValue('id'))
+                    if (xmlFile == null)
+                        return JsonOutput.toJson([:])
+
+                    xmlMap.put("id",xmlFile.getAttributeValue('id'))
                     xmlMap.put("titles",[])
 
-                    //--> titles
-                    //------> title
                     //get all titleInfo
                     def titles = xmlFile.getChild("titles").getChildren()
 
                     //loop through and build up title
-                    titles.each{ title ->
-                        def titleMap = [:]
-                        title.getAttributeValue("id")
-                        titleMap.put("id", title.getAttributeValue("id"))
-                        titleMap.put("name",title.getAttributeValue("name"))
+                    if(titles != null)
+                        titles.each{ title ->
+                            def titleMap = [:]
+                            titleMap.put("id", title.getAttributeValue("id"))
+                            titleMap.put("name",title.getAttributeValue("name"))
 
-                        //get facet
-                        facetMap = [:]
-                        def facet = title.getChild("facet")
-                        facetMap.put("name",facet.getAttributeValue("name"))
-                        facetMap.put("feature",facet.getChildText("feature"))
+                            //get facet
+                            facetMap = [:]
+                            def facet = title.getChild("facet")
+                            if(facet != null){
+                                facetMap.put("name",facet.getAttributeValue("name"))
+                                facetMap.put("feature",facet.getChildText("feature"))
 
-                        //add faucet To Title
-                        titleMap.put("facet",facetMap)
-
-                        //add title to titles
-                        xmlMap["titles"].add(titleMap)
-                    }
+                                //add faucet To Title
+                                titleMap.put("facet",facetMap)
+                            }
+                            //add title to titles
+                            xmlMap["titles"].add(titleMap)
+                        }
                     return JsonOutput.toJson(xmlMap)
-                    ]]>
+            ]]>
         </script>
     </groovyStep>
     <!-- ................................................... End Steps .................................................... -->
