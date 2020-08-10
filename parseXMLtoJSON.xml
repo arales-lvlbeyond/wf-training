@@ -1,0 +1,102 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="parseXMLtoJSONgw"
+          name="parseXMLtoJSONgw"
+          executionLabelExpression="parseXMLtoJSONgw | "
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion="">
+    <initialStepName>parse xml for json metadata</initialStepName>
+
+    <groovyStep name="parse xml for json metadata"
+                executionLabelExpression="parsing xml for json metadata"
+                resultDataDef="jsonMetadata"
+                nextStep="end">
+        <script>
+            <![CDATA[
+
+                    import groovy.json.*
+
+                    // Parse XML with jdom and build xmlMapping
+                    def xmlMap = [:]
+
+                    //Get Media Owner?
+                    //def cust = xmlFile.getChild('cust')
+
+                    //add cust ID
+                    //xmlMap.put("id",cust.getAttributeValue('id'))
+                    xmlMap.put("titles",[])
+
+                    //--> titles
+                    //------> title
+                    //get all titleInfo
+                    def titles = xmlFile.getChild("titles").getChildren()
+
+                    //loop through and build up title
+                    titles.each{ title ->
+                        def titleMap = [:]
+                        title.getAttributeValue("id")
+                        titleMap.put("id", title.getAttributeValue("id"))
+                        titleMap.put("name",title.getAttributeValue("name"))
+
+                        //get facet
+                        facetMap = [:]
+                        def facet = title.getChild("facet")
+                        facetMap.put("name",facet.getAttributeValue("name"))
+                        facetMap.put("feature",facet.getChildText("feature"))
+
+                        //add faucet To Title
+                        titleMap.put("facet",facetMap)
+
+                        //add title to titles
+                        xmlMap["titles"].add(titleMap)
+                    }
+                    return JsonOutput.toJson(xmlMap)
+                    ]]>
+        </script>
+    </groovyStep>
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+     <!-- ................................................... Data Defs .................................................... -->
+    <contextDataDef name="xmlFile" dataType="XML" >
+    <defaultDataExpression>
+        <![CDATA[
+               <cust id="Crown Media">
+                    <titles>
+                        <title id="2" name="love by design">
+                            <facet name="workingTitle">
+                                <feature>Parsed_sample_title_FOO</feature>
+                            </facet>
+                        </title>
+                        <title id="5" name="waterdeep">
+                            <facet name="waterdeep title">
+                                <feature>waterdeep_sample_title_2</feature>
+                            </facet>
+                        </title>
+                    </titles>
+                </cust>
+                ]]>
+    </defaultDataExpression>
+    </contextDataDef>
+    <contextDataDef name="jsonMetadata" dataType="JSON"  defaultDataExpression="{}"  />
+
+</workflow>

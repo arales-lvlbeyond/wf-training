@@ -1,0 +1,244 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="Ex14_gw"
+          name="Ex14_gw"
+          executionLabelExpression="Ex14_gw | "
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>parse json</initialStepName>
+    <groovyStep name="parse json"
+                executionLabelExpression="${csvOut.absolutePath}"
+                resultDataDef="csvOut"
+                nextStep="end">
+        <script>
+            <![CDATA[
+			import com.csvreader.CsvWriter
+			import java.io.File
+			import java.text.SimpleDateFormat
+			import com.routeto1.filesystem.FileWrapperUtils
+
+			char delimiter = ','
+
+			// Initialize output csv
+			CsvWriter outputCsv = new CsvWriter(new FileWriter(csvOut.absolutePath, true), delimiter)
+
+            outputCsv.write('Field Name')
+            outputCsv.write('Display Name')
+            outputCsv.endRecord()
+
+
+			// add entry for each asset identified as missing source file
+			JSONfile.rows.each { field ->
+				outputCsv.write(field.name.asText())
+                outputCsv.write(field.displayName.asText())
+                outputCsv.endRecord()
+            }
+			outputCsv.close()
+
+			return csvOut
+			]]>
+
+        </script>
+
+    </groovyStep>
+
+
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+
+
+    <!-- ................................................... Data Defs .................................................... -->
+    <contextDataDef name="csvOut"       dataType="File"     defaultDataExpression="/reachengine/media/testCSV.csv"/>
+    <contextDataDef name="inputJson"    dataType="JSON"/>
+    <contextDataDef name="resultCSV"    dataType="File"/>
+    <contextDataDef name="JSONfile"     dataType="JSON">
+        <defaultDataExpression>
+            <![CDATA[
+                {
+                  "rows": [
+                    {
+                      "id": "1000001921",
+                      "name": "picklistA",
+                      "displayName": "Picklist A",
+                      "type": "lookup",
+                      "multiple": true,
+                      "showInInspector": true,
+                      "archived": false,
+                      "picklistId": "1000001921",
+                      "picklistItems": [
+                        {
+                          "key": "ddff37f7fabc4dfe8298ad67e546b9c5",
+                          "value": "a_1"
+                        },
+                        {
+                          "key": "d611d62301e24b6193ccbf138ef5d819",
+                          "value": "a_2"
+                        },
+                        {
+                          "key": "1046edde00834950852c0b2e049a7027",
+                          "value": "a_3"
+                        },
+                        {
+                          "key": "c4e258c5faac4506bb4b60553d4d75d2",
+                          "value": "Option 1"
+                        },
+                        {
+                          "key": "72cd5ec4ab384a93be7a647b8fe8380a",
+                          "value": "Option 2"
+                        },
+                        {
+                          "key": "0e45e4f7d222473e9c93cb7d7cb25772",
+                          "value": "Option 3"
+                        },
+                        {
+                          "key": "a22e8f07cd0a4f2883168cc2d9f4af8d",
+                          "value": "Option 4"
+                        },
+                        {
+                          "key": "ca872890e6ec46f995e51c5579a9ab54",
+                          "value": "Option 5"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "1002017579",
+                      "name": "supportNumberField",
+                      "displayName": "Support Number Field",
+                      "type": "double",
+                      "multiple": false,
+                      "showInInspector": true,
+                      "archived": false,
+                      "picklistId": "1002017579"
+                    },
+                    {
+                      "id": "1002017580",
+                      "name": "supportLargeTextField",
+                      "displayName": "Support Large Text Field",
+                      "type": "text",
+                      "multiple": false,
+                      "showInInspector": true,
+                      "archived": false,
+                      "picklistId": "1002017580"
+                    },
+                    {
+                      "id": "1002028861",
+                      "name": "supportSmallTextField",
+                      "displayName": "Support Small Text Field",
+                      "type": "string",
+                      "multiple": false,
+                      "showInInspector": true,
+                      "archived": false,
+                      "picklistId": "1002028861"
+                    },
+                    {
+                      "id": "1002028862",
+                      "name": "supportCheckboxField",
+                      "displayName": "Support Checkbox Field",
+                      "type": "boolean",
+                      "multiple": false,
+                      "showInInspector": true,
+                      "archived": false,
+                      "picklistId": "1002028862"
+                    },
+                    {
+                      "id": "1002078694",
+                      "name": "jackSinglePicklistCorruptionTest",
+                      "displayName": "Jack Single Picklist Corruption Test",
+                      "type": "lookup",
+                      "description": "Does this get corrupted?",
+                      "multiple": false,
+                      "showInInspector": true,
+                      "archived": false,
+                      "picklistId": "1002078694",
+                      "picklistItems": [
+                        {
+                          "key": "bb5fc585d46b4801985a4687713bb0f6",
+                          "value": "Gringo"
+                        },
+                        {
+                          "key": "092603a01a0945f886b06c46b5fae67f",
+                          "value": "Jorge"
+                        },
+                        {
+                          "key": "f1e8cc97794b4967b1710c156b8f4d2c",
+                          "value": "Juan"
+                        },
+                        {
+                          "key": "ccf464e8ee994d3e87a96f19867834fe",
+                          "value": "Paolo"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "1002193941",
+                      "name": "testnegative",
+                      "displayName": "testnegative",
+                      "type": "double",
+                      "multiple": false,
+                      "showInInspector": false,
+                      "archived": false,
+                      "picklistId": "1002193941"
+                    },
+                    {
+                      "id": "1002225441",
+                      "name": "smallText1",
+                      "displayName": "small text 1",
+                      "type": "string",
+                      "multiple": false,
+                      "showInInspector": true,
+                      "archived": false,
+                      "picklistId": "1002225441"
+                    },
+                    {
+                      "id": "1002235911",
+                      "name": "craigCal",
+                      "displayName": "CraigCal",
+                      "type": "date",
+                      "multiple": false,
+                      "showInInspector": true,
+                      "archived": true,
+                      "picklistId": "1002235911"
+                    },
+                    {
+                      "id": "1003258975",
+                      "name": "testBoolean",
+                      "displayName": "testBoolean",
+                      "type": "boolean",
+                      "multiple": false,
+                      "showInInspector": true,
+                      "archived": false,
+                      "picklistId": "1003258975"
+                    }
+                  ]
+                }
+
+            ]]>
+        </defaultDataExpression>
+
+    </contextDataDef>
+
+
+</workflow>

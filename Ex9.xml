@@ -21,7 +21,7 @@
           id="Ex9_gw"
           name="Ex9_gw"
           executionLabelExpression="Ex9_gw | "
-          subjectDOClassName="AssetCollection"
+          subjectDOClassName=""
           showInUserInterface="true"
           sdkVersion=""
           description="Checks if collection contains testSinglePicklist with 'Option A'">
@@ -29,11 +29,8 @@
 
     <initialStepName>query for assets</initialStepName>
 
-
-
-    <initialStepName>query for assets</initialStepName>
     <queryStep name="query for assets"
-               executionLabelExpression="Number of assets in Collection: ${Assets.size()}"
+               executionLabelExpression="Number of assets in Collection: ${foundAssets.size()}"
                targetDataObjectClass="AssetMaster"
                resultDataDef="foundAssets"
                nextStep="end">
@@ -53,16 +50,6 @@
 
     <!-- success -->
     <noopStep name="end"/>
-    <contextDataDef name="Assets"           dataType="Data Object" multiple="true" defaultDataExpression="${subject.items.![asset]}"/>
     <contextDataDef name="foundAssets"      dataType="Data Object" multiple="true"/>
-    <contextDataDef name="meta"             dataType="String"      defaultDataExpression="${Assets[0].metadata.testSinglePicklist}"/>
-
-
-    <!-- ................................................... Data Defs .................................................... -->
-    <!-- ............ INPUT ............. -->
-
-
-    <!-- ......... PROCESSING ........... -->
-
 
 </workflow>

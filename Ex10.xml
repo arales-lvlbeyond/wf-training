@@ -21,7 +21,7 @@
           id="Ex10_gw"
           name="Ex10_gw"
           executionLabelExpression="Ex10_gw | "
-          subjectDOClassName="AssetCollection"
+          subjectDOClassName=""
           showInUserInterface="true"
           sdkVersion="">
 
@@ -37,8 +37,10 @@
                 <criteria>
                    <and>
                       <condition property="metadata.testMulitPicklist" op="like">
-                         <test value="${#picklistValue('testMulitPicklist', 'Multi 1', )}" />
-                         <test value="${#picklistValue('testMulitPicklist', 'Multi 2', )}" />
+                        <test value="${#picklistValue('testMulitPicklist', 'Multi 2', )}" />
+                      </condition>
+                       <condition property="metadata.testMulitPicklist" op="like">
+                           <test value="${#picklistValue('testMulitPicklist', 'Multi 1', )}" />
                       </condition>
                    </and>
                 </criteria>
