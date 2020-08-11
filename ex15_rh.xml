@@ -26,87 +26,92 @@
           sdkVersion=""
 >
 
-    <initialStepName>parse xml for json metadata</initialStepName>
+    <initialStepName>set xml data def</initialStepName>
 
-    <groovyStep name="parse xml for json metadata"
-                executionLabelExpression="parsing xml for json metadata"
+    <setContextData
+            name="set xml data def"
+            targetDataDef="xmlObject"
+            valueExpression="${inputXMLFile}"
+            nextStep="build json for each node"
+            devStep="true"
+    />
+
+    <groovyStep name="build json for each node"
+                executionLabelExpression="Building jsons per title node in titles element"
                 resultDataDef="jsonMetadata"
                 nextStep="end"
     >
         <script>
             <![CDATA[
+			import groovy.*
+			import groovy.json.*
+			import groovy.util.XmlSlurper
+			import org.jdom.output.XMLOutputter
+			import com.fasterxml.jackson.databind.node.*
+			import com.fasterxml.jackson.annotation.JsonIgnore
+			import java.util.List
 
-			def fields = xmlFile.getChild("titles")
-			def xmlMap = [:]
+			def nodeJsons = []
 
-			if (titles != null) {
-				titles.getChildren().each { title ->
+			def xml = new XmlSlurper(false, false).parseText(new File(xmlFile).text)
 
-					def key = title.getAttribute('id')
-					def val = title.getAttribute('name')
+			def titlesNodes = xml.titles.children()
+			titlesNodes.each { title ->
+				def workingTitle = title.facet.feature
 
-					if (val != null) {
-						xmlMap."$key" = val
-					}
-				}
+				def newTitleJson = new JsonSlurper().parseText("{}")
+				newTitleJson.put('test', title.@id.text())
+				newTitleJson.put('reachWaterDeepTitle', workingTitle.text())
+
+				nodeJsons.add(newTitleJson)
 			}
 
-			xmlMapping.fieldNames().each { key ->
-				if (xmlMap.containsKey(key.toString()) && xmlMap."$key".toString().length() != 0) {
-					jsonMetadata.put(xmlMapping."$key".textValue(), xmlMap."$key".toString())
-				}
-			}
-
-			return jsonMetadata
-
+			return nodeJsons
 			]]>
         </script>
     </groovyStep>
 
+    <!--<executeSubflowStep name="update metadata for title"-->
+    <!--targetWorkflowId="queryAssetsByHouseCode"-->
+    <!--subjectChangePath="${jsonMetadata}"-->
+    <!--subflowTargetDataDef="titleAssetMetadata"-->
+    <!--nextStep="end"-->
+    <!--/>-->
+
     <!-- ................................................... End Steps .................................................... -->
     <!-- success -->
-    <noopStep name="end"/>
-
+    <noopStep name="end" />
     <!-- ................................................... Data Defs .................................................... -->
     <!-- ............ INPUT ............. -->
+    <contextDataDef name="inputXMLFile"                     dataType="File"         userInput="true" />
+    <contextDataDef name="inputXMLFilePath"                 dataType="String"       defaultDataExpression="${inputXMLFile?.absolutePath}" />
+    <contextDataDef name="xmlObject"                        dataType="XML"   />
 
     <contextDataDef name="xmlFile" dataType="XML" >
         <defaultDataExpression>
             <![CDATA[
-			<xmlResponse>
-                <cust id="Crown Media">
-                    <titles>
-                        <title id="2" name="love by design">
-                            <facet name="workingTitle">
-                                <feature>Parsed_sample_title_FOO</feature>
-                            </facet>
-                        </title>
-                        <title id="5" name="waterdeep">
-                            <facet name="waterdeep title">
-                                <feature>waterdeep_sample_title_2</feature>
-                            </facet>
-                        </title>
-                    </titles>
-                </cust>
-			</xmlResponse>
-			]]>
+                   <cust id="Crown Media">
+                        <titles>
+                            <title id="2" name="love by design">
+                                <facet name="workingTitle">
+                                    <feature>Parsed_sample_title_FOO</feature>
+                                </facet>
+                            </title>
+                            <title id="5" name="waterdeep">
+                                <facet name="waterdeep title">
+                                    <feature>waterdeep_sample_title_2</feature>
+                                </facet>
+                            </title>
+                        </titles>
+                    </cust>
+                    ]]>
         </defaultDataExpression>
     </contextDataDef>
-
-    <contextDataDef name="xmlMapping" dataType="JSON" >
-        <defaultDataExpression>
-            <![CDATA[
-				{
-					"key1" : "id",
-					"key2" : "name",
-					"key3" : "title",
-					"key4" : "feature"
-				}
-            ]]>
-        </defaultDataExpression>
-    </contextDataDef>
-
-    <contextDataDef name="jsonMetadata" dataType="JSON"  defaultDataExpression="{}"  />
-
     <!-- ......... PROCESSING ........... -->
+    <contextDataDef name="jsonMetadata"                     dataType="JSON"         multiple="true"/>
+
+    <contextDataDef name="testVal"                          dataType="String" />
+
+
+
 </workflow>
