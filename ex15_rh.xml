@@ -1,0 +1,112 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="ex15_rh"
+          name="ex15_rh"
+          executionLabelExpression="ex15_rh | "
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>parse xml for json metadata</initialStepName>
+
+    <groovyStep name="parse xml for json metadata"
+                executionLabelExpression="parsing xml for json metadata"
+                resultDataDef="jsonMetadata"
+                nextStep="end"
+    >
+        <script>
+            <![CDATA[
+
+			def fields = xmlFile.getChild("titles")
+			def xmlMap = [:]
+
+			if (titles != null) {
+				titles.getChildren().each { title ->
+
+					def key = title.getAttribute('id')
+					def val = title.getAttribute('name')
+
+					if (val != null) {
+						xmlMap."$key" = val
+					}
+				}
+			}
+
+			xmlMapping.fieldNames().each { key ->
+				if (xmlMap.containsKey(key.toString()) && xmlMap."$key".toString().length() != 0) {
+					jsonMetadata.put(xmlMapping."$key".textValue(), xmlMap."$key".toString())
+				}
+			}
+
+			return jsonMetadata
+
+			]]>
+        </script>
+    </groovyStep>
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+
+    <!-- ................................................... Data Defs .................................................... -->
+    <!-- ............ INPUT ............. -->
+
+    <contextDataDef name="xmlFile" dataType="XML" >
+        <defaultDataExpression>
+            <![CDATA[
+			<xmlResponse>
+                <cust id="Crown Media">
+                    <titles>
+                        <title id="2" name="love by design">
+                            <facet name="workingTitle">
+                                <feature>Parsed_sample_title_FOO</feature>
+                            </facet>
+                        </title>
+                        <title id="5" name="waterdeep">
+                            <facet name="waterdeep title">
+                                <feature>waterdeep_sample_title_2</feature>
+                            </facet>
+                        </title>
+                    </titles>
+                </cust>
+			</xmlResponse>
+			]]>
+        </defaultDataExpression>
+    </contextDataDef>
+
+    <contextDataDef name="xmlMapping" dataType="JSON" >
+        <defaultDataExpression>
+            <![CDATA[
+				{
+					"key1" : "id",
+					"key2" : "name",
+					"key3" : "title",
+					"key4" : "feature"
+				}
+            ]]>
+        </defaultDataExpression>
+    </contextDataDef>
+
+    <contextDataDef name="jsonMetadata" dataType="JSON"  defaultDataExpression="{}"  />
+
+    <!-- ......... PROCESSING ........... -->
+</workflow>
