@@ -53,17 +53,17 @@
 
 			def nodeJsons = []
 
-			def xml = new XmlSlurper(false, false).parseText(new File(xmlFile).text)
+			def titlesNodes = xmlObject.getChild('titles')?.getChildren()
 
-			def titlesNodes = xml.titles.children()
 			titlesNodes.each { title ->
-				def workingTitle = title.facet.feature
+				def workingTitle = title.getChild('facet')?.getAttributeValue('name')
+                def workingTitleValue = title.getChild('facet')?.getChild('feature')?.getValue()
+				def xmlMap = [:]
 
-				def newTitleJson = new JsonSlurper().parseText("{}")
-				newTitleJson.put('test', title.@id.text())
-				newTitleJson.put('reachWaterDeepTitle', workingTitle.text())
+                xmlMap.fieldName = workingTitle
+                xmlMap.value = workingTitleValue
 
-				nodeJsons.add(newTitleJson)
+                nodeJsons.add(xmlMap)
 			}
 
 			return nodeJsons
@@ -87,26 +87,7 @@
     <contextDataDef name="inputXMLFilePath"                 dataType="String"       defaultDataExpression="${inputXMLFile?.absolutePath}" />
     <contextDataDef name="xmlObject"                        dataType="XML"   />
 
-    <contextDataDef name="xmlFile" dataType="XML" >
-        <defaultDataExpression>
-            <![CDATA[
-                   <cust id="Crown Media">
-                        <titles>
-                            <title id="2" name="love by design">
-                                <facet name="workingTitle">
-                                    <feature>Parsed_sample_title_FOO</feature>
-                                </facet>
-                            </title>
-                            <title id="5" name="waterdeep">
-                                <facet name="waterdeep title">
-                                    <feature>waterdeep_sample_title_2</feature>
-                                </facet>
-                            </title>
-                        </titles>
-                    </cust>
-                    ]]>
-        </defaultDataExpression>
-    </contextDataDef>
+
     <!-- ......... PROCESSING ........... -->
     <contextDataDef name="jsonMetadata"                     dataType="JSON"         multiple="true"/>
 
