@@ -74,11 +74,11 @@
               executionLabelExpression="Checking for csvmap instance"
               resultDataDef="fileSpecificMetadata"
   >
-      <transition condition="${fileSpecificMetadata.size() == 0}">
-          <targetStepName>end</targetStepName>
+      <transition condition="${fileSpecificMetadata.size() &gt; 0}">
+          <targetStepName>ingest asset</targetStepName>
       </transition>
       <transition condition="${true}">
-          <targetStepName>ingest asset</targetStepName>
+          <targetStepName>end</targetStepName>
       </transition>
       <script>
             <![CDATA[
