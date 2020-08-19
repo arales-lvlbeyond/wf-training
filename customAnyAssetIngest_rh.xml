@@ -23,6 +23,7 @@
           executionLabelExpression="customAnyAssetIngest_rh | ${fileToIngest.name} "
           subjectDOClassName=""
           showInUserInterface="true"
+          resultDataDef=""
           sdkVersion=""
           group="Rob"
 >
@@ -69,9 +70,8 @@
         </criteria>
     </queryStep>
 
-    
   <groovyStep name="check against CsvMap for instance of file"
-              executionLabelExpression="Checking for csvmap instance"
+              executionLabelExpression="Checking for csvmap instance | CheckDuplicates = ${checkForDuplicate}"
               resultDataDef="fileSpecificMetadata"
   >
       <transition condition="${fileSpecificMetadata.size() &gt; 0}">
@@ -131,6 +131,7 @@
         <subflowContextDataMapping parentDataDef="checkForDuplicate"        subflowDataDef="checkForDuplicate"/>
         <subflowContextDataMapping parentDataDef="overwriteExisting"        subflowDataDef="overwriteExisting"/>
         <subflowContextDataMapping parentDataDef="versionDuplicate"         subflowDataDef="versionDuplicate"/>
+        <subflowContextDataMapping parentDataDef="fileSpecificMetadata"     subflowDataDef="fileSpecificMetadata"/>
     </executeSubflowStep>
 
 
@@ -199,7 +200,7 @@
 
 
     <!-- ............................................... Context Data Defs ................................................ -->
-    <contextDataDef name="testValue" dataType="String" />
+    <contextDataDef name="allowDuplicateNamesFlag" dataType="Boolean" defaultDataExpression="true" />
     <!-- ....... User Input Variables ........ -->
     <contextDataDef name="fileToIngest" 		    dataType="File"				userInput="true"    label="File To Ingest"   required="true" displayIndex="1" />
     <contextDataDef name="collections"              dataType="Data Object"      userInput="true"    label="Collections"      multiple="true" displayIndex="2" >
@@ -287,7 +288,7 @@
     
     <contextDataDef name="currentExecutions" 	    dataType="Data Object" 	    multiple="true"/>
     <contextDataDef name="assetMaster" 			    dataType="Data Object"/>
-    <contextDataDef name="ingestSubflow"            dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.sourceIngestWorkflow') ?: '_baseAssetIngest'}"/>
+    <contextDataDef name="ingestSubflow"            dataType="String"           defaultDataExpression="${'customBaseAssetIngest_rh'}"/>
     <contextDataDef name="metadataSubflow"          dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.metadataWorkflow') ?: '_saveAnyAssetMetadata'}"/>
     <contextDataDef name="proxiesSubflow"           dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.proxiesWorkflow') ?: '_createProxiesAnyAsset'}"/>
 
