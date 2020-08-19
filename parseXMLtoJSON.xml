@@ -33,10 +33,11 @@
         <script>
             <![CDATA[
 
-                    import groovy.json.*
+
 
                     // Parse XML with jdom and build xmlMapping
                     def xmlMap = [:]
+
 
                     //add cust ID
                     if (xmlFile == null)
