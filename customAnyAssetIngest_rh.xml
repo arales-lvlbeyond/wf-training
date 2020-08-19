@@ -139,7 +139,7 @@
                         targetWorkflowId="${metadataSubflow}"
                         subjectChangePath="${assetMaster}"
                         subflowTargetDataDef="asset"
-                        executionLabelExpression="Add any collections, categories, and metadata"
+                        executionLabelExpression="Add any collections, categories, and metadata for ${assetMaster}"
                         pctComplete="50"
                         nextStep="create proxies"
     >
@@ -149,8 +149,9 @@
         <subflowContextDataMapping parentDataDef="metadataFormType"         subflowDataDef="metadataFormType"/>
         <subflowContextDataMapping parentDataDef="categories"               subflowDataDef="categories"/>
         <subflowContextDataMapping parentDataDef="categoryNames"            subflowDataDef="categoryNames"/>
-        <subflowContextDataMapping parentDataDef="jsonMetadata"             subflowDataDef="jsonMetadata"/>
+<!--        <subflowContextDataMapping parentDataDef="jsonMetadata"             subflowDataDef="jsonMetadata"/>-->
         <subflowContextDataMapping parentDataDef="linkMetadata"             subflowDataDef="linkMetadata"/>
+        <subflowContextDataMapping parentDataDef="fileSpecificMetadata" subflowDataDef="jsonMetadata"/>
     </executeSubflowStep>
 
 
@@ -200,7 +201,7 @@
 
 
     <!-- ............................................... Context Data Defs ................................................ -->
-    <contextDataDef name="allowDuplicateNamesFlag" dataType="Boolean" defaultDataExpression="true" />
+
     <!-- ....... User Input Variables ........ -->
     <contextDataDef name="fileToIngest" 		    dataType="File"				userInput="true"    label="File To Ingest"   required="true" displayIndex="1" />
     <contextDataDef name="collections"              dataType="Data Object"      userInput="true"    label="Collections"      multiple="true" displayIndex="2" >
@@ -245,7 +246,7 @@
     </contextDataDef>
     <!-- ingest source options (defaults in subflow) -->
     <contextDataDef name="sourceAsMezz"             dataType="Boolean"          defaultDataExpression="${skipMezzanineFlag ?: null}"/>
-    <contextDataDef name="checkForDuplicate"        dataType="Boolean"          defaultDataExpression="${allowDuplicateNamesFlag ?: null}"/>
+    <contextDataDef name="checkForDuplicate"        dataType="Boolean"          defaultDataExpression="true"/>
     <contextDataDef name="overwriteExisting"        dataType="Boolean"/>
     <contextDataDef name="versionDuplicate"         dataType="Boolean"/>
     <contextDataDef name="assetName"                dataType="String"           defaultDataExpression="${versionName != null? versionName : null}"/>
@@ -289,14 +290,13 @@
     <contextDataDef name="currentExecutions" 	    dataType="Data Object" 	    multiple="true"/>
     <contextDataDef name="assetMaster" 			    dataType="Data Object"/>
     <contextDataDef name="ingestSubflow"            dataType="String"           defaultDataExpression="${'customBaseAssetIngest_rh'}"/>
-    <contextDataDef name="metadataSubflow"          dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.metadataWorkflow') ?: '_saveAnyAssetMetadata'}"/>
+    <contextDataDef name="metadataSubflow"          dataType="String"           defaultDataExpression="${'_saveAnyAssetMetadata'}"/>
     <contextDataDef name="proxiesSubflow"           dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.proxiesWorkflow') ?: '_createProxiesAnyAsset'}"/>
 
     <!-- ..... Deprecated But Supported ...... -->
     <contextDataDef name="assetForVersioning"       dataType="Data Object"/>
     <contextDataDef name="asyncProxiesFlag"         dataType="Boolean"/>
     <contextDataDef name="skipMezzanineFlag"        dataType="Boolean"/>
-    <contextDataDef name="allowDuplicateNamesFlag"  dataType="Boolean"/>
     <contextDataDef name="versionName"              dataType="String"/>
 
 </workflow>

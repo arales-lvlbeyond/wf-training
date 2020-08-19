@@ -51,7 +51,7 @@
                resultDataDef="assetMaster"
                pctComplete="15"
     >
-        <transition condition="${assetMaster}">
+        <transition condition="${assetMaster == null}">
             <targetStepName>ingest asset</targetStepName>
         </transition>
         <transition condition="${true}">
@@ -61,7 +61,7 @@
             <![CDATA[
 			<criteria>
 				<and>
-					<condition property="uuid" op="eq">
+					<condition property="metadata.recordOID" op="eq">
 						<test value="${T(org.apache.commons.lang.StringEscapeUtils).escapeXml(fileSpecificMetadata.recordOID)}"/>
 					</condition>
 				</and>
@@ -95,18 +95,18 @@
                    executionLabelExpression="Ingesting ${fileToIngest.absolutePath}"
                    searchableFlagExpression="true"
                    pctComplete="95"
-                   nextStep="end"
+                   nextStep="get asset master"
     />
 
 
-<!--    <setContextData name="get asset master"-->
-<!--                    targetDataDef="assetMaster"-->
-<!--                    valueExpression="${assetVersion.masterAsset}"-->
-<!--                    executionLabelExpression="Getting the AssetMaster for Asset Version (ID = ${assetVersion.id})"-->
-<!--                    devStep="true"-->
-<!--                    pctComplete="99"-->
-<!--                    nextStep="end"-->
-<!--    />-->
+    <setContextData name="get asset master"
+                    targetDataDef="assetMaster"
+                    valueExpression="${assetVersion.masterAsset}"
+                    executionLabelExpression="Getting the AssetMaster for Asset Version (ID = ${assetVersion.id})"
+                    devStep="true"
+                    pctComplete="99"
+                    nextStep="end"
+    />
 
 
     <!-- ................................................... End Steps .................................................... -->
@@ -124,7 +124,7 @@
     <contextDataDef name="assetName"                dataType="String"           defaultDataExpression="${fileToIngest.name}"/>
 
     <!-- ....... Processing Variables ........ -->
-<!--    <contextDataDef name="assetVersion" 		    dataType="Data Object"/>-->
+    <contextDataDef name="assetVersion" 		    dataType="Data Object"/>
     <contextDataDef name="assetMaster" 			    dataType="Data Object"/>
     <contextDataDef name="fileSpecificMetadata" dataType="JSON" />
 
