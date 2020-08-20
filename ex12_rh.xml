@@ -1,0 +1,218 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="ex12_rh"
+          name="ex12_rh"
+          executionLabelExpression="ex12_rh | Start Time: ${#newDate()}"
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>is workflow executing</initialStepName>
+
+
+    <queryStep name="is workflow executing"
+               targetDataObjectClass="WorkflowExecution"
+               resultDataDef="currentExecutions"
+               executionLabelExpression="Check to see if this workflow is currently executing"
+    >
+        <transition condition="${currentExecutions.size() == 0}">
+            <targetStepName>check if is empty</targetStepName>
+        </transition>
+        <transition condition="true">
+            <targetStepName>workflow is running</targetStepName>
+        </transition>
+
+        <criteria>
+            <![CDATA[
+                <criteria>
+                    <and>
+                        <condition property="workflowVersion.workflow.key" op="eq">
+                            <test value="${ #this.workflow.workflowVersion.workflow.key }" />
+                        </condition>
+                        <condition property="uuid" op="noteq">
+                            <test value="${ #this.workflow.uuid }" />
+                        </condition>
+                        <condition property="status" op="in">
+                            <tests>
+                                <test value="CREATED" />
+                                <test value="QUEUED" />
+                                <test value="EXECUTING" />
+                            </tests>
+                        </condition>
+                    </and>
+                </criteria>
+            ]]>
+		</criteria>
+    </queryStep>
+
+
+    <!-- ................................................... Initial Checks .................................................... -->
+    <noopStep name="check if  is empty"
+              executionLabelExpression="are there  in ? ${ != null AND .size() &gt; 0}"
+    >
+        <transition condition="${ != null AND .size() &gt; 0}">
+            <targetStepName>query for running subflows</targetStepName>
+        </transition>
+        <transition condition="true">
+            <targetStepName>no to process</targetStepName>
+        </transition>
+    </noopStep>
+
+
+    <!-- ................................................... Queue Loop ................................................... -->
+    <queryStep name="query for running subflows"
+               targetDataObjectClass="WorkflowExecution"
+               resultDataDef="executingSubflows"
+               executionLabelExpression="checking for workflows (with id = ${subflowId}) that are also not in a finished state"
+               devStep="true"
+               nextStep="check running subflows"
+    >
+        <criteria>
+            <![CDATA[
+            <criteria>
+                <and>
+                    <condition property="workflowVersion.workflow.key" op="eq">
+                        <test value="${ingestSubflow}"/>
+                    </condition>
+                    <condition property="executionLabel" op="like">
+							<test value="%<!-- TODO: FILL THIS IN -->%" />
+						</condition>
+                    <condition property="status" op="in">
+                        <tests>
+                            <test value="CREATED" />
+                            <test value="QUEUED" />
+                            <test value="EXECUTING" />
+                         </tests>
+                    </condition>
+                </and>
+            </criteria>
+            ]]>
+		</criteria>
+    </queryStep>
+
+
+    <noopStep name="check running subflows"
+              executionLabelExpression="number of subflows (id = ${subflowId}) running >>> ${executingSubflows.size()} out of ${queueLimit}"
+              devStep="true"
+    >
+        <transition condition="${ executingSubflows.size() &lt; queueLimit }">
+            <targetStepName>ready next</targetStepName>
+        </transition>
+        <transition condition="${ true }">
+            <targetStepName>queue full</targetStepName>
+        </transition>
+    </noopStep>
+
+
+    <delayStep name="queue full"
+               delaySecondsExpression="${ queryPollInterval }"
+               executionLabelExpression="${.size()}  remaining | Subflows running: ${executingSubflows.size()}/${queueLimit} | Waiting ${queryPollInterval} seconds."
+               nextStep="query for running subflows"
+    />
+
+
+    <setContextData name="ready next "
+                    targetDataDef="next"
+                    valueExpression="${.size() &gt; batchSize ? .subList(0, batchSize) : .subList(0, .size()) }"
+                    executionLabelExpression="got ${next.size()}  to process"
+                    nextStep="remove s from main list"
+                    devStep="true"
+    />
+
+
+    <groovyStep name="remove  from main list"
+                resultDataDef=""
+                executionLabelExpression="remove ${next.size()}  from the main list"
+                nextStep="process "
+                devStep="true"
+    >
+        <script>
+            <![CDATA[
+	        .removeAll(next)
+	        return 
+	     ]]>
+		</script>
+    </groovyStep>
+
+
+    <executeSubflowStep name="process "
+                        executionLabelExpression="Preparing ${next.size()} . | ${.size()}  remaining | Subflows running: ${executingSubflows.size()}/${queueLimit}"
+                        targetWorkflowId="${subflowId}"
+                        subjectChangePath="${next}"
+                        subflowTargetDataDef=""
+                        waitForCompletionExpression="false"
+                        nextStep="check for more "
+    >
+
+    </executeSubflowStep>
+
+
+    <noopStep name="check for more "
+              executionLabelExpression="number of  remaining >>> ${.size()}"
+              devStep="true"
+    >
+        <transition condition="${.size() &gt; 0}">
+            <targetStepName>query for running subflows</targetStepName>
+        </transition>
+        <transition condition="true">
+            <targetStepName>end</targetStepName>
+        </transition>
+    </noopStep>
+
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="no  to process"
+              pctComplete="99"
+              nextStep="end"
+    />
+
+
+    <noopStep name="end" pctComplete="100"/>
+
+
+    <!-- fail -->
+    <failWorkflowStep name="workflow is running"
+                      executionLabelExpression="Workflow already executing on the directory"
+                      reasonExpression="Workflow already executing on the directory"
+    />
+
+
+    <!-- ............................................... Context Data Defs ................................................ -->
+    <!-- .......... Input Variables .......... -->
+
+
+    <!-- ....... Processing Variables ........ -->
+    <contextDataDef name="currentExecutions" dataType="Data Object" multiple="true"/>
+    <contextDataDef name="" dataType="" multiple="true"/>
+    <!-- queue loop variables -->
+    <contextDataDef name="next" dataType="" multiple="true"/>
+    <contextDataDef name="executingSubflows" dataType="Data Object" multiple="true"/>
+    <contextDataDef name="queueLimit" dataType="Integer"
+                    defaultDataExpression="${#sysconfig('workflows.ex12_rh.queueLimit') ?: 11}"/>
+    <contextDataDef name="batchSize" dataType="Integer"
+                    defaultDataExpression="${#sysconfig('workflows.ex12_rh.batchSize') ?: 10}"/>
+    <contextDataDef name="queryPollInterval" dataType="Integer"
+                    defaultDataExpression="${#sysconfig('workflows.ex12_rh.queryPollInterval') ?: 60}"/>
+    <contextDataDef name="subflowId" dataType="String" defaultDataExpression=""/>
+
+</workflow>
