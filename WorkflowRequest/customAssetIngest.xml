@@ -1,0 +1,303 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://levelsbeyond.com/schema/workflow"
+	xsi:schemaLocation="
+		http://levelsbeyond.com/schema/latest
+		https://s3-us-west-2.amazonaws.com/schema.levelsbeyond.com/2.3.16.17962/studio.xsd
+	"
+	id="customAssetIngest"
+	name="Custom Asset Ingest"
+	executionLabelExpression="Custom Asset Ingest | ${fileToIngest.name}"
+	subjectDOClassName=""
+	showInUserInterface="true"
+	group="practice problem"
+	sdkVersion="">
+
+	<initialStepName>get files metadata</initialStepName>
+	
+	<groovyStep name="get files metadata"
+		executionLabelExpression="Metadata for file found? | ${jsonMetadata != null}"
+		resultDataDef="jsonMetadata"
+		devStep="true"
+	>
+		<transition condition="${jsonMetadata.size() &gt; 0}">
+			<targetStepName>check for duplicate asset</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>file not found error</targetStepName>
+		</transition>
+		
+		<script>
+			<![CDATA[
+				def metadata = [:]
+			
+				assetInfoJsons.any { file ->
+					if (file.get('fileName').asText().equals(fileToIngest.name))
+						metadata = file.metadata
+				}
+			
+				return metadata
+			]]>
+		</script>
+	</groovyStep>
+	
+	<!-- filter assets by recordOID -->
+	<queryStep name="check for duplicate asset"
+		executionLabelExpression="Duplicates found? ${!duplicates.isEmpty()}"
+		targetDataObjectClass="AssetMaster"
+		resultDataDef="duplicates"
+	>
+		<transition condition="${duplicates.isEmpty()}">
+			<targetStepName>set asset category and collections</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>duplicate found error</targetStepName>
+		</transition>
+
+		<criteria>
+			<![CDATA[
+	            <criteria>
+					<and>
+	                    <condition property="metadata.recordOID" op="eq">
+	                        <test value="${jsonMetadata.get('recordOID').asText()}" />
+	                    </condition>
+	                </and>
+	            </criteria>
+	        ]]>
+		</criteria>
+	</queryStep>
+	
+	<setContextData name="set asset category and collections"
+		targetDataDef="categoryNames"
+		valueExpression="${jsonMetadata.get('category').asText()}"
+		devStep="true"
+	>
+		<!-- Collection(s) were input by the user or passed in -->
+		<transition condition="${collections.size() &gt; 0}">
+			<targetStepName>ingest</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>check for collection to create</targetStepName>
+		</transition>
+	</setContextData>
+	
+	<noopStep name="check for collection to create" devStep="true" >
+		<transition condition="${jsonMetadata.get('collection').asText().length() &gt; 0}">
+			<targetStepName>create collection</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>ingest</targetStepName>
+		</transition>
+	</noopStep>
+	
+	<executeSubflowStep name="create collection"
+		executionLabelExpression="Creating collection named: ${jsonMetadata.get('collection').asText()}"
+		targetWorkflowId="createCollection"
+		subjectChangePath="${jsonMetadata.get('collection').asText()}"
+		subflowTargetDataDef="collectionName"
+		resultDataDef="collections"
+		nextStep="ingest"
+	/>
+	
+	<executeSubflowStep name="ingest"
+		executionLabelExpression="Ingest ${fileToIngest.name}"
+		targetWorkflowId="${ingestSubflow}"
+		subjectChangePath="${fileToIngest}"
+		subflowTargetDataDef="fileToIngest"
+		resultDataDef="assetMaster"
+	>
+		<transition condition="${#proxyContent(assetMaster) != null}">
+			<targetStepName>end</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>mark proxy triage</targetStepName>
+		</transition>
+		<!-- ingest -->
+		<subflowContextDataMapping parentDataDef="sourceAsMezz"             subflowDataDef="sourceAsMezz"/>
+		<subflowContextDataMapping parentDataDef="checkForDuplicate"        subflowDataDef="checkForDuplicate"/>
+		<subflowContextDataMapping parentDataDef="overwriteExisting"        subflowDataDef="overwriteExisting"/>
+		<subflowContextDataMapping parentDataDef="versionDuplicate"         subflowDataDef="versionDuplicate"/>
+		<!-- metadata -->
+		<subflowContextDataMapping parentDataDef="failOnMetadataError"      subflowDataDef="failOnMetadataError"/>
+		<subflowContextDataMapping parentDataDef="collections"              subflowDataDef="collections"/>
+		<subflowContextDataMapping parentDataDef="metadataForm"             subflowDataDef="metadataForm"/>
+		<subflowContextDataMapping parentDataDef="metadataFormType"         subflowDataDef="metadataFormType"/>
+		<subflowContextDataMapping parentDataDef="categories"               subflowDataDef="categories"/>
+		<subflowContextDataMapping parentDataDef="categoryNames"            subflowDataDef="categoryNames"/>
+		<subflowContextDataMapping parentDataDef="jsonMetadata"             subflowDataDef="jsonMetadata"/>
+		<subflowContextDataMapping parentDataDef="linkMetadata"             subflowDataDef="linkMetadata"/>
+		<!-- proxies -->
+		<subflowContextDataMapping parentDataDef="failOnProxiesError"       subflowDataDef="failOnProxiesError"/>
+		<subflowContextDataMapping parentDataDef="prioritiesJson"           subflowDataDef="prioritiesJson"/>
+		<subflowContextDataMapping parentDataDef="createMezz"               subflowDataDef="createMezz"/>
+		<subflowContextDataMapping parentDataDef="createProxy"              subflowDataDef="createProxy"/>
+		<subflowContextDataMapping parentDataDef="createThumbVideo"         subflowDataDef="createThumbVideo"/>
+		<subflowContextDataMapping parentDataDef="createThumb"              subflowDataDef="createThumb"/>
+		<subflowContextDataMapping parentDataDef="videoMezzTemplate"        subflowDataDef="videoMezzTemplate"/>
+		<subflowContextDataMapping parentDataDef="videoProxyTemplate"       subflowDataDef="videoProxyTemplate"/>
+		<subflowContextDataMapping parentDataDef="videoThumbVideoTemplate"  subflowDataDef="videoThumbVideoTemplate"/>
+		<subflowContextDataMapping parentDataDef="videoThumbnailPercentage" subflowDataDef="videoThumbnailPercentage"/>
+		<subflowContextDataMapping parentDataDef="audioProxyTemplate"       subflowDataDef="audioProxyTemplate"/>
+		<subflowContextDataMapping parentDataDef="imageProxyArguments"      subflowDataDef="imageProxyArguments"/>
+		<subflowContextDataMapping parentDataDef="imageThumbArguments"      subflowDataDef="imageThumbArguments"/>
+		<subflowContextDataMapping parentDataDef="documentProxyArguments"   subflowDataDef="documentProxyArguments"/>
+		<subflowContextDataMapping parentDataDef="documentThumbArguments"   subflowDataDef="documentThumbArguments"/>
+	</executeSubflowStep>
+	
+	<!--<noopStep name="ingest" />-->
+	
+	<saveDataObjectStep name="mark proxy triage"
+		dataObjectExpression="${assetMaster.metadata}"
+		nextStep="end"
+	>
+		<property name="proxyTriage">true</property>
+	</saveDataObjectStep>
+	
+	<!-- ................................................... End Steps .................................................... -->
+	<!-- fail -->
+	<setContextData name="file not found error"
+		targetDataDef="errorMsg"
+		valueExpression="${fileToIngest.absolutePath} not found in given CSV."
+		nextStep="log failure to file"
+	/>
+	
+	
+	<setContextData name="duplicate found error"
+		targetDataDef="errorMsg"
+		valueExpression="Duplicate of ${fileToIngest.name} found. Duplicate asset's id: ${duplicates[0].id.toString()}"
+		nextStep="log failure to file"
+	/>
+	
+	<executeSubflowStep name="log failure to file"
+		targetWorkflowId="writeToLogFile"
+		nextStep="failed to ingest"
+	>
+		<subflowContextDataMapping parentDataDef="fileToIngest"     subflowDataDef="file" />
+		<subflowContextDataMapping parentDataDef="errorMsg"         subflowDataDef="errorMsg" />
+		<subflowContextDataMapping parentDataDef="errorLogFile"     subflowDataDef="errorLogFile" />
+	</executeSubflowStep>
+	
+	<failWorkflowStep name="failed to ingest"
+		executionLabelExpression="Failed to ingest"
+		reasonExpression="Failed to ingest"
+	/>
+	
+	<!-- success -->
+	<noopStep name="end" />
+	<!-- ................................................... Data Defs .................................................... -->
+	<!-- ....... User Input Variables ........ -->
+	<contextDataDef name="fileToIngest" 		    dataType="File"				userInput="true"    label="File To Ingest"   required="true" displayIndex="1" />
+	<contextDataDef name="collections"              dataType="Data Object"      userInput="true"    label="Collections"      multiple="true" displayIndex="2" >
+		<picklist>
+			<dataObjectSearch dataObjectClass="AssetCollection">
+				<searchPath>name</searchPath>
+			</dataObjectSearch>
+		</picklist>
+	</contextDataDef>
+	<contextDataDef name="metadataForm"             dataType="MetadataForm"     userInput="true"    label="Metadata Form" displayIndex="3" />
+	
+	<!-- .......... Input Variables .......... -->
+	<!-- workflow inputs -->
+	<contextDataDef name="assetInfoJsons"           dataType="JSON"         multiple="true"  userInput="true"/>
+	
+	<!-- metadata options -->
+	<contextDataDef name="failOnMetadataError"      dataType="Boolean"/>
+	<contextDataDef name="categories"               dataType="Data Object"      multiple="true"/>
+	<contextDataDef name="categoryNames"            dataType="String"           multiple="true"/>
+	<contextDataDef name="jsonMetadata"             dataType="JSON">
+		<description>
+			Single JSON where:
+				Keys are metadata property names
+				Values are what to set the matching property to on this asset
+		</description>
+	</contextDataDef>
+	<contextDataDef name="linkMetadata"             dataType="JSON"             multiple="true">
+		<description>
+			Array of JSONs where:
+				Each JSON has 2 Keys (propertyName and linkInfo):
+					propertyName's value is a metadata property name of type link
+					linkInfo's value is a JSON with 2 keys (title and url):
+						title's value is the display name for the link
+						url's value is the url to open when the title is clicked on
+		</description>
+	</contextDataDef>
+	<contextDataDef name="metadataFormType"         dataType="String"           defaultDataExpression="access">
+		<description>
+			TEMPORARY!!! (Forms will be standardized to the same format in the future)
+				Valid types = "access" or "panel"
+		</description>
+	</contextDataDef>
+	<!-- ingest source options (defaults in subflow) -->
+	<contextDataDef name="sourceAsMezz"             dataType="Boolean"          defaultDataExpression="${skipMezzanineFlag ?: null}"/>
+	<contextDataDef name="checkForDuplicate"        dataType="Boolean"          defaultDataExpression="${allowDuplicateNamesFlag ?: null}"/>
+	<contextDataDef name="overwriteExisting"        dataType="Boolean"/>
+	<contextDataDef name="versionDuplicate"         dataType="Boolean"/>
+	<contextDataDef name="assetName"                dataType="String"           defaultDataExpression="${versionName != null? versionName : null}"/>
+	<contextDataDef name="assetVersion" 		    dataType="Data Object"      defaultDataExpression="${assetForVersioning != null? assetForVersioning : null}">
+		<description>
+			Passed in to operate on an existing asset rather than looking for a duplicate asset or creating a new one
+		</description>
+	</contextDataDef>
+	<!-- transcode options -->
+	<contextDataDef name="failOnProxiesError"       dataType="Boolean"/>
+	<contextDataDef name="asyncProxies"             dataType="Boolean"          defaultDataExpression="${asyncProxiesFlag ?: (#sysconfig('workflows.default.ingestAsset.asyncProxies') ?: true)}"/>
+	<!-- create proxies? (defaults in subflows) -->
+	<contextDataDef name="prioritiesJson"           dataType="JSON">
+		<description>
+			A JSON with the structure:
+				{"mezzanine":w, "proxy":x, "thumbnailVideo":y, "thumbnail":z}
+		</description>
+	</contextDataDef>
+	<contextDataDef name="createMezz"               dataType="Boolean"/>
+	<contextDataDef name="createProxy"              dataType="Boolean"/>
+	<contextDataDef name="createThumb"              dataType="Boolean"/>
+	<contextDataDef name="createThumbVideo"         dataType="Boolean"/>
+	<!-- supply a file for proxies? -->
+	<contextDataDef name="mezzFile"                 dataType="File"/>
+	<contextDataDef name="proxyFile"                dataType="File"/>
+	<contextDataDef name="thumbFile"                dataType="File"/>
+	<contextDataDef name="thumbVideoFile"           dataType="File"/>
+	<!-- Templates/Args for proxies creation (defaults in subflows) -->
+	<contextDataDef name="videoMezzTemplate"    	dataType="String"/>
+	<contextDataDef name="videoProxyTemplate"    	dataType="String"/>
+	<contextDataDef name="videoThumbVideoTemplate"  dataType="String"/>
+	<contextDataDef name="videoThumbnailPercentage" dataType="Integer"/>
+	<contextDataDef name="audioProxyTemplate"       dataType="String"/>
+	<contextDataDef name="imageProxyArguments"      dataType="String"/>
+	<contextDataDef name="imageThumbArguments"      dataType="String"/>
+	<contextDataDef name="documentProxyArguments"   dataType="String"/>
+	<contextDataDef name="documentThumbArguments"   dataType="String"/>
+	
+	<!-- ....... Processing Variables ........ -->
+	<contextDataDef name="currentExecutions" 	    dataType="Data Object" 	    multiple="true"/>
+	<contextDataDef name="assetMaster" 			    dataType="Data Object"/>
+	<contextDataDef name="ingestSubflow"            dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.sourceIngestWorkflow') ?: '_anyAssetIngest'}"/>
+	<contextDataDef name="metadataSubflow"          dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.metadataWorkflow') ?: '_saveAnyAssetMetadata'}"/>
+	<contextDataDef name="proxiesSubflow"           dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.proxiesWorkflow') ?: '_createProxiesAnyAsset'}"/>
+	
+	<contextDataDef name="duplicates"               dataType="Data Object"  multiple="true" />
+	<contextDataDef name="errorMsg"                 dataType="String" />
+	<contextDataDef name="errorLogFile"             dataType="File" />
+	
+	<!-- ..... Deprecated But Supported ...... -->
+	<contextDataDef name="assetForVersioning"       dataType="Data Object"/>
+	<contextDataDef name="asyncProxiesFlag"         dataType="Boolean"/>
+	<contextDataDef name="skipMezzanineFlag"        dataType="Boolean"/>
+	<contextDataDef name="allowDuplicateNamesFlag"  dataType="Boolean"/>
+	<contextDataDef name="versionName"              dataType="String"/>
+</workflow>
