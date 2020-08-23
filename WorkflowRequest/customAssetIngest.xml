@@ -105,46 +105,51 @@
 		</transition>
 	</noopStep>
 	
-	<noopStep name="create collection" />
+	<executeSubflowStep name="create collection"
+		executionLabelExpression="Creating collection named: ${jsonMetadata.get('collection').asText()}"
+		targetWorkflowId="createCollection"
+		subjectChangePath="${jsonMetadata.get('collection').asText()}"
+		subflowTargetDataDef="collectionName"
+		resultDataDef="collections"
+		nextStep="ingest"
+	/>
 	
-	<noopStep name="ingest" />
-	
-	<!--<executeSubflowStep name="ingest"-->
-		<!--executionLabelExpression="Ingest ${fileToIngest}"-->
-		<!--targetWorkflowId="ingestSubflow"-->
-		<!--nextStep="end"-->
-	<!--&gt;-->
-		<!--&lt;!&ndash; ingest &ndash;&gt;-->
-		<!--<subflowContextDataMapping parentDataDef="sourceAsMezz"             subflowDataDef="sourceAsMezz"/>-->
-		<!--<subflowContextDataMapping parentDataDef="checkForDuplicate"        subflowDataDef="checkForDuplicate"/>-->
-		<!--<subflowContextDataMapping parentDataDef="overwriteExisting"        subflowDataDef="overwriteExisting"/>-->
-		<!--<subflowContextDataMapping parentDataDef="versionDuplicate"         subflowDataDef="versionDuplicate"/>-->
-		<!--&lt;!&ndash; metadata &ndash;&gt;-->
-		<!--<subflowContextDataMapping parentDataDef="failOnMetadataError"      subflowDataDef="failOnMetadataError"/>-->
-		<!--<subflowContextDataMapping parentDataDef="collections"              subflowDataDef="collections"/>-->
-		<!--<subflowContextDataMapping parentDataDef="metadataForm"             subflowDataDef="metadataForm"/>-->
-		<!--<subflowContextDataMapping parentDataDef="metadataFormType"         subflowDataDef="metadataFormType"/>-->
-		<!--<subflowContextDataMapping parentDataDef="categories"               subflowDataDef="categories"/>-->
-		<!--<subflowContextDataMapping parentDataDef="categoryNames"            subflowDataDef="categoryNames"/>-->
-		<!--<subflowContextDataMapping parentDataDef="jsonMetadata"             subflowDataDef="jsonMetadata"/>-->
-		<!--<subflowContextDataMapping parentDataDef="linkMetadata"             subflowDataDef="linkMetadata"/>-->
-		<!--&lt;!&ndash; proxies &ndash;&gt;-->
-		<!--<subflowContextDataMapping parentDataDef="failOnProxiesError"       subflowDataDef="failOnProxiesError"/>-->
-		<!--<subflowContextDataMapping parentDataDef="prioritiesJson"           subflowDataDef="prioritiesJson"/>-->
-		<!--<subflowContextDataMapping parentDataDef="createMezz"               subflowDataDef="createMezz"/>-->
-		<!--<subflowContextDataMapping parentDataDef="createProxy"              subflowDataDef="createProxy"/>-->
-		<!--<subflowContextDataMapping parentDataDef="createThumbVideo"         subflowDataDef="createThumbVideo"/>-->
-		<!--<subflowContextDataMapping parentDataDef="createThumb"              subflowDataDef="createThumb"/>-->
-		<!--<subflowContextDataMapping parentDataDef="videoMezzTemplate"        subflowDataDef="videoMezzTemplate"/>-->
-		<!--<subflowContextDataMapping parentDataDef="videoProxyTemplate"       subflowDataDef="videoProxyTemplate"/>-->
-		<!--<subflowContextDataMapping parentDataDef="videoThumbVideoTemplate"  subflowDataDef="videoThumbVideoTemplate"/>-->
-		<!--<subflowContextDataMapping parentDataDef="videoThumbnailPercentage" subflowDataDef="videoThumbnailPercentage"/>-->
-		<!--<subflowContextDataMapping parentDataDef="audioProxyTemplate"       subflowDataDef="audioProxyTemplate"/>-->
-		<!--<subflowContextDataMapping parentDataDef="imageProxyArguments"      subflowDataDef="imageProxyArguments"/>-->
-		<!--<subflowContextDataMapping parentDataDef="imageThumbArguments"      subflowDataDef="imageThumbArguments"/>-->
-		<!--<subflowContextDataMapping parentDataDef="documentProxyArguments"   subflowDataDef="documentProxyArguments"/>-->
-		<!--<subflowContextDataMapping parentDataDef="documentThumbArguments"   subflowDataDef="documentThumbArguments"/>-->
-	<!--</executeSubflowStep>-->
+	<executeSubflowStep name="ingest"
+		executionLabelExpression="Ingest ${fileToIngest}"
+		targetWorkflowId="${ingestSubflow}"
+		nextStep="end"
+	>
+		<!-- ingest -->
+		<subflowContextDataMapping parentDataDef="sourceAsMezz"             subflowDataDef="sourceAsMezz"/>
+		<subflowContextDataMapping parentDataDef="checkForDuplicate"        subflowDataDef="checkForDuplicate"/>
+		<subflowContextDataMapping parentDataDef="overwriteExisting"        subflowDataDef="overwriteExisting"/>
+		<subflowContextDataMapping parentDataDef="versionDuplicate"         subflowDataDef="versionDuplicate"/>
+		<!-- metadata -->
+		<subflowContextDataMapping parentDataDef="failOnMetadataError"      subflowDataDef="failOnMetadataError"/>
+		<subflowContextDataMapping parentDataDef="collections"              subflowDataDef="collections"/>
+		<subflowContextDataMapping parentDataDef="metadataForm"             subflowDataDef="metadataForm"/>
+		<subflowContextDataMapping parentDataDef="metadataFormType"         subflowDataDef="metadataFormType"/>
+		<subflowContextDataMapping parentDataDef="categories"               subflowDataDef="categories"/>
+		<subflowContextDataMapping parentDataDef="categoryNames"            subflowDataDef="categoryNames"/>
+		<subflowContextDataMapping parentDataDef="jsonMetadata"             subflowDataDef="jsonMetadata"/>
+		<subflowContextDataMapping parentDataDef="linkMetadata"             subflowDataDef="linkMetadata"/>
+		<!-- proxies -->
+		<subflowContextDataMapping parentDataDef="failOnProxiesError"       subflowDataDef="failOnProxiesError"/>
+		<subflowContextDataMapping parentDataDef="prioritiesJson"           subflowDataDef="prioritiesJson"/>
+		<subflowContextDataMapping parentDataDef="createMezz"               subflowDataDef="createMezz"/>
+		<subflowContextDataMapping parentDataDef="createProxy"              subflowDataDef="createProxy"/>
+		<subflowContextDataMapping parentDataDef="createThumbVideo"         subflowDataDef="createThumbVideo"/>
+		<subflowContextDataMapping parentDataDef="createThumb"              subflowDataDef="createThumb"/>
+		<subflowContextDataMapping parentDataDef="videoMezzTemplate"        subflowDataDef="videoMezzTemplate"/>
+		<subflowContextDataMapping parentDataDef="videoProxyTemplate"       subflowDataDef="videoProxyTemplate"/>
+		<subflowContextDataMapping parentDataDef="videoThumbVideoTemplate"  subflowDataDef="videoThumbVideoTemplate"/>
+		<subflowContextDataMapping parentDataDef="videoThumbnailPercentage" subflowDataDef="videoThumbnailPercentage"/>
+		<subflowContextDataMapping parentDataDef="audioProxyTemplate"       subflowDataDef="audioProxyTemplate"/>
+		<subflowContextDataMapping parentDataDef="imageProxyArguments"      subflowDataDef="imageProxyArguments"/>
+		<subflowContextDataMapping parentDataDef="imageThumbArguments"      subflowDataDef="imageThumbArguments"/>
+		<subflowContextDataMapping parentDataDef="documentProxyArguments"   subflowDataDef="documentProxyArguments"/>
+		<subflowContextDataMapping parentDataDef="documentThumbArguments"   subflowDataDef="documentThumbArguments"/>
+	</executeSubflowStep>
 	
 	<!-- ................................................... End Steps .................................................... -->
 	<!-- fail -->
