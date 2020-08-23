@@ -106,7 +106,7 @@
 		devStep="true"
 	>
 		<transition condition="${errorLogFile.exists()}">
-			<targetStepName>query for running subflows</targetStepName>
+			<targetStepName>set original log file size</targetStepName>
 		</transition>
 		<transition condition="true">
 			<targetStepName>failed to make log file</targetStepName>
@@ -133,8 +133,12 @@
 			]]>
 		</script>
 	</groovyStep>
-		
-		
+	
+	<setContextData name="set original log file size"
+		targetDataDef="originalFileSize"
+		valueExpression="${errorLogFile.length()}"
+		nextStep="query for running subflows"
+	/>
 	
 	<!-- ................................................... Queue Loop ................................................... -->
 	<queryStep name="query for running subflows"
@@ -195,7 +199,7 @@
             <targetStepName>reduce array</targetStepName>
         </transition>
         <transition condition="${true}">
-            <targetStepName>end</targetStepName>
+            <targetStepName>wait a bit</targetStepName>
         </transition>
 		
 		<!-- ingest -->
@@ -240,6 +244,29 @@
 		executionLabelExpression="${filesToIngest.size()} Files Remaining"
 		nextStep="query for running subflows"/>
 	
+	<delayStep name="wait a bit"
+		delaySecondsExpression="30"
+		devStep="true"
+	>
+		<transition condition="${errorLogFile.length() &gt; originalFileSize}">
+			<targetStepName>email failures</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>end</targetStepName>
+		</transition>
+	</delayStep>
+	
+	
+	<emailStep name="email failures"
+		emailAddressesExpression="${emails}"
+		subjectExpression="Directory Ingest Failures"
+		attachmentsExpression="${errorLogFile}"
+		nextStep="end"
+	>
+		<body>
+See attached file for list of files that failed to ingest.
+		</body>
+	</emailStep>
 	<!-- ................................................... End Steps .................................................... -->
 	<!-- success -->
 	<noopStep name="no files to process"
@@ -355,6 +382,9 @@
 	<contextDataDef name="filesToIngestFromCSV"     dataType="File"         multiple="true" />
 	<contextDataDef name="assetInfoJsons"           dataType="JSON"         multiple="true"     defaultDataExpression="${T(java.util.Collections).emptyList()}" />
 	<contextDataDef name="errorLogFile"             dataType="File"         defaultDataExpression="/reachengine/customWorkflowLogs/directoryIngest_${#uuid()}.csv" />
+	<contextDataDef name="originalFileSize"         dataType="Double" />
+	<contextDataDef name="emails"                   dataType="String"       defaultDataExpression="aales+195@levelsbeyond.com,${#this.startedBy.emailAddress}" />
+	
 	<!--    Loop   -->
 	<contextDataDef name="executingSubflows"       dataType="Data Object"    multiple="true"/>
     <contextDataDef name="queueLimit" 			    dataType="Integer" 		defaultDataExpression="${#sysconfig('workflows.default.ingestDirectory.queueLimit') ?: 100}"/>

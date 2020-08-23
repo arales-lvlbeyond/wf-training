@@ -27,7 +27,7 @@
 	showInUserInterface="false"
 	sdkVersion="">
 
-	<initialStepName>check if workflow is running</initialStepName>
+	<initialStepName>write to log</initialStepName>
 	
 	<queryStep name="check if workflow is running"
 		targetDataObjectClass="WorkflowExecution"
