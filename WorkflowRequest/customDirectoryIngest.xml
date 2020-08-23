@@ -1,0 +1,174 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://levelsbeyond.com/schema/workflow"
+	xsi:schemaLocation="
+		http://levelsbeyond.com/schema/latest
+		https://s3-us-west-2.amazonaws.com/schema.levelsbeyond.com/2.3.16.17962/studio.xsd
+	"
+	id="customDirectoryIngest"
+	name="Directory Ingest with CSV"
+	executionLabelExpression="Directory Ingest with CSV | ${directoryToIngest.absolutePath}"
+	subjectDOClassName=""
+	showInUserInterface="true"
+	group="Practice problem"
+	sdkVersion="">
+
+	<initialStepName>get asset info from csv</initialStepName>
+	
+	<executeSubflowStep name="get asset info from csv"
+		executionLabelExpression="Number of assets in csv: ${assetInfoJsons.size()}"
+		targetWorkflowId="extractMetadataFromCSV"
+		subjectChangePath="${csvFile}"
+		subflowTargetDataDef="csvFile"
+		resultDataDef="assetInfoJsons"
+		nextStep="show original filesToIngest"
+	/>
+	
+	<noopStep name="show original filesToIngest"
+		executionLabelExpression="Original files: ${filesToIngest.size()}"
+		nextStep="filter files from csv"
+		devStep="true"
+	/>
+	
+	<!-- filter files that aren't in the csv by file name-->
+	<groovyStep name="filter files from csv"
+		executionLabelExpression="Number of files to ingest: ${filesToIngest.size()}"
+		resultDataDef="filesToIngestFromCSV"
+		nextStep="ingest directory"
+	>
+		<script>
+			<![CDATA[
+				def list = []
+				
+				assetInfoJsons.each { asset ->
+					def fileName = asset.get('fileName').asText()
+					filesToIngest.each { file ->
+						if (fileName.equals(file.name))
+							list.add(file)
+					}
+				}
+			
+				return list
+			]]>
+		</script>
+	</groovyStep>
+	
+	<executeSubflowStep name="ingest directory"
+		executionLabelExpression="Ingest directory ${directoryToIngest.absolutePath}"
+		targetWorkflowId="customAssetIngest"
+		subjectChangePath="${assetInfoJsons}"
+		subflowTargetDataDef="assetInfo"
+		subflowExecutionLimitExpression="10"
+		nextStep="end"
+	/>
+	
+	<!-- ................................................... End Steps .................................................... -->
+	<!-- success -->
+	<noopStep name="end" />
+	<!-- ................................................... Data Defs .................................................... -->
+	<!-- ............ INPUT ............. -->
+	<contextDataDef name="csvFile"                  dataType="File"         userInput="true" />
+	<contextDataDef name="directoryToIngest" 		dataType="Directory"	userInput="true"    label="Directory To Ingest"  required="true" displayIndex="1" />
+	<contextDataDef name="collections"              dataType="Data Object"  userInput="true"    label="Collections"          multiple="true" displayIndex="2" >
+		<picklist>
+			<dataObjectSearch dataObjectClass="AssetCollection">
+				<searchPath>name</searchPath>
+			</dataObjectSearch>
+		</picklist>
+	</contextDataDef>
+	<contextDataDef name="metadataForm"             dataType="MetadataForm" userInput="true"    label="Metadata Form" displayIndex="3" />
+	
+	<!-- .......... Input Variables .......... -->
+	<!-- metadata options -->
+	<contextDataDef name="failOnMetadataError"      dataType="Boolean"/>
+	<contextDataDef name="categories"               dataType="Data Object"  multiple="true"/>
+	<contextDataDef name="categoryNames"            dataType="String"           multiple="true"/>
+	<contextDataDef name="jsonMetadata"             dataType="JSON">
+		<description>
+			Single JSON where:
+				Keys are metadata property names
+				Values are what to set the matching property to on this asset
+		</description>
+	</contextDataDef>
+	<contextDataDef name="linkMetadata"             dataType="JSON"             multiple="true">
+		<description>
+			Array of JSONs where:
+				Each JSON has 2 Keys (propertyName and linkInfo):
+					propertyName's value is a metadata property name of type link
+					linkInfo's value is a JSON with 2 keys (title and url):
+						title's value is the display name for the link
+						url's value is the url to open when the title is clicked on
+		</description>
+	</contextDataDef>
+	<contextDataDef name="metadataFormType"         dataType="String"           defaultDataExpression="access">
+		<description>
+			TEMPORARY!!! (Forms will be standardized to the same format in the future)
+				Valid types = "access" or "panel"
+		</description>
+	</contextDataDef>
+	<!-- ingest options (defaults in subflow) -->
+	<contextDataDef name="sourceAsMezz"             dataType="Boolean"/>
+	<contextDataDef name="checkForDuplicate"        dataType="Boolean"/>
+	<contextDataDef name="overwriteExisting"        dataType="Boolean"/>
+	<contextDataDef name="versionDuplicate"         dataType="Boolean"/>
+	<!-- transcode options -->
+	<contextDataDef name="failOnProxiesError"       dataType="Boolean"/>
+	<contextDataDef name="asyncProxies"             dataType="Boolean"/>
+	<!-- create proxies? (defaults in subflows) -->
+	<contextDataDef name="prioritiesJson"           dataType="JSON">
+		<description>
+			A JSON with the structure:
+				{"mezzanine":w, "proxy":x, "thumbnailVideo":y, "thumbnail":z}
+		</description>
+	</contextDataDef>
+	<contextDataDef name="createMezz"               dataType="Boolean"/>
+	<contextDataDef name="createProxy"              dataType="Boolean"/>
+	<contextDataDef name="createThumb"              dataType="Boolean"/>
+	<contextDataDef name="createThumbVideo"         dataType="Boolean"/>
+	<!-- supply a file for proxies? -->
+	<contextDataDef name="mezzFile"                 dataType="File"/>
+	<contextDataDef name="proxyFile"                dataType="File"/>
+	<contextDataDef name="thumbFile"                dataType="File"/>
+	<contextDataDef name="thumbVideoFile"           dataType="File"/>
+	<!-- Templates/Args for proxies creation (defaults in subflows) -->
+	<contextDataDef name="videoMezzTemplate"    	dataType="String"/>
+	<contextDataDef name="videoProxyTemplate"    	dataType="String"/>
+	<contextDataDef name="videoThumbVideoTemplate"  dataType="String"/>
+	<contextDataDef name="videoThumbnailPercentage" dataType="Integer"/>
+	<contextDataDef name="audioProxyTemplate"       dataType="String"/>
+	<contextDataDef name="imageProxyArguments"      dataType="String"/>
+	<contextDataDef name="imageThumbArguments"      dataType="String"/>
+	<contextDataDef name="documentProxyArguments"   dataType="String"/>
+	<contextDataDef name="documentThumbArguments"   dataType="String"/>
+	
+	<!-- ....... Processing Variables ........ -->
+	<contextDataDef name="currentExecutions" 	    dataType="Data Object" 	multiple="true"/>
+	<contextDataDef name="filesToIngest" 		    dataType="File"		    multiple="true"     defaultDataExpression="${#walkDir(directoryToIngest, null)}"/>
+    <contextDataDef name="originalCount"            dataType="Double"/>
+	<!-- queue loop variables -->
+	<contextDataDef name="ingestSubflow"      	    dataType="String" 		defaultDataExpression="${#sysconfig('workflows.default.ingestAssetWorkflow') ?: '_anyAssetIngest'}"/>
+	
+	<!-- custom processing variables -->
+	<contextDataDef name="filesToIngestFromCSV"     dataType="File"         multiple="true" />
+	<contextDataDef name="assetInfoJsons"           dataType="JSON"         multiple="true"     defaultDataExpression="${T(java.util.Collections).emptyList()}" />
+	
+	<!--    Loop   -->
+	<contextDataDef name="executingSubflows"       dataType="Data Object"    multiple="true"/>
+    <contextDataDef name="queueLimit" 			    dataType="Integer" 		defaultDataExpression="${#sysconfig('workflows.default.ingestDirectory.queueLimit') ?: 100}"/>
+    <contextDataDef name="queryPollInterval"  	    dataType="Integer" 		defaultDataExpression="${#sysconfig('workflows.default.ingestDirectory.queryPollInterval') ?: 10}"/>
+</workflow>
