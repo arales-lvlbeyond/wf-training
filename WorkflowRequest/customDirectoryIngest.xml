@@ -22,7 +22,7 @@
 	"
 	id="customDirectoryIngest"
 	name="Directory Ingest with CSV"
-	executionLabelExpression="Directory Ingest with CSV | ${directoryToIngest.absolutePath}"
+	executionLabelExpression=" Directory Ingest with CSV | ${directoryToIngest.absolutePath}"
 	subjectDOClassName=""
 	showInUserInterface="true"
 	group="Practice problem"
@@ -91,15 +91,50 @@
 		subjectChangePath="${csvFile}"
 		subflowTargetDataDef="csvFile"
 		resultDataDef="assetInfoJsons"
-		nextStep="query for running subflows"
 	>
 		<transition condition="${assetInfoJsons.size() &gt; 0}">
-			<targetStepName>query for running subflows</targetStepName>
+			<targetStepName>create error log file</targetStepName>
 		</transition>
 		<transition condition="true">
 			<targetStepName>no files found to process</targetStepName>
 		</transition>
 	</executeSubflowStep>
+	
+	<groovyStep name="create error log file"
+		executionLabelExpression="Creating error log file.. | File: ${errorLogFile.absolutePath}"
+		resultDataDef="errorLogFile"
+		devStep="true"
+	>
+		<transition condition="${errorLogFile.exists()}">
+			<targetStepName>query for running subflows</targetStepName>
+		</transition>
+		<transition condition="true">
+			<targetStepName>failed to make log file</targetStepName>
+		</transition>
+		<script>
+			<![CDATA[
+			import com.csvreader.CsvWriter
+			import java.io.File
+			import java.text.SimpleDateFormat
+			import com.routeto1.filesystem.FileWrapperUtils
+			
+			char delimiter = ','
+			
+			
+			// Initialize output csv
+			CsvWriter outputCsv = new CsvWriter(new FileWriter(errorLogFile.absolutePath, true), delimiter)
+			outputCsv.write('File')
+			outputCsv.write('Error Message')
+			outputCsv.endRecord()
+			outputCsv.close()
+			
+			return	errorLogFile
+			
+			]]>
+		</script>
+	</groovyStep>
+		
+		
 	
 	<!-- ................................................... Queue Loop ................................................... -->
 	<queryStep name="query for running subflows"
@@ -195,6 +230,7 @@
 		<subflowContextDataMapping parentDataDef="documentThumbArguments"   subflowDataDef="documentThumbArguments"/>
 		<!-- custom -->
 		<subflowContextDataMapping parentDataDef="assetInfoJsons"   subflowDataDef="assetInfoJsons" />
+		<subflowContextDataMapping parentDataDef="errorLogFile"     subflowDataDef="errorLogFile" />
 	</executeSubflowStep>
 
 	<setContextData name="reduce array"
@@ -225,6 +261,11 @@
 	<failWorkflowStep name="workflow is running"
 		executionLabelExpression="Workflow already executing on the directory"
 		reasonExpression="Workflow already executing on the directory"
+	/>
+	
+	<failWorkflowStep name="failed to make log file"
+		reasonExpression="failed to make log file | ${errorLogFile.absolutePath}"
+		executionLabelExpression="failed to make log file | ${errorLogFile.absolutePath}"
 	/>
 	
 	<!-- ................................................... Data Defs .................................................... -->
@@ -313,7 +354,7 @@
 	<!-- custom processing variables -->
 	<contextDataDef name="filesToIngestFromCSV"     dataType="File"         multiple="true" />
 	<contextDataDef name="assetInfoJsons"           dataType="JSON"         multiple="true"     defaultDataExpression="${T(java.util.Collections).emptyList()}" />
-	
+	<contextDataDef name="errorLogFile"             dataType="File"         defaultDataExpression="/reachengine/customWorkflowLogs/directoryIngest_${#uuid()}.csv" />
 	<!--    Loop   -->
 	<contextDataDef name="executingSubflows"       dataType="Data Object"    multiple="true"/>
     <contextDataDef name="queueLimit" 			    dataType="Integer" 		defaultDataExpression="${#sysconfig('workflows.default.ingestDirectory.queueLimit') ?: 100}"/>

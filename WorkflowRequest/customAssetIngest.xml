@@ -39,7 +39,7 @@
 			<targetStepName>check for duplicate asset</targetStepName>
 		</transition>
 		<transition condition="${true}">
-			<targetStepName>file not found</targetStepName>
+			<targetStepName>file not found error</targetStepName>
 		</transition>
 		
 		<script>
@@ -66,7 +66,7 @@
 			<targetStepName>set asset category and collections</targetStepName>
 		</transition>
 		<transition condition="${true}">
-			<targetStepName>duplicate found</targetStepName>
+			<targetStepName>duplicate found error</targetStepName>
 		</transition>
 
 		<criteria>
@@ -119,8 +119,14 @@
 		targetWorkflowId="${ingestSubflow}"
 		subjectChangePath="${fileToIngest}"
 		subflowTargetDataDef="fileToIngest"
-		nextStep="end"
+		resultDataDef="assetMaster"
 	>
+		<transition condition="${#proxyContent(assetMaster) != null}">
+			<targetStepName>end</targetStepName>
+		</transition>
+		<transition condition="${true}">
+			<targetStepName>mark proxy triage</targetStepName>
+		</transition>
 		<!-- ingest -->
 		<subflowContextDataMapping parentDataDef="sourceAsMezz"             subflowDataDef="sourceAsMezz"/>
 		<subflowContextDataMapping parentDataDef="checkForDuplicate"        subflowDataDef="checkForDuplicate"/>
@@ -155,11 +161,36 @@
 	
 	<!--<noopStep name="ingest" />-->
 	
+	<saveDataObjectStep name="mark proxy triage"
+		dataObjectExpression="${assetMaster.metadata}"
+		nextStep="end"
+	>
+		<property name="proxyTriage">true</property>
+	</saveDataObjectStep>
+	
 	<!-- ................................................... End Steps .................................................... -->
 	<!-- fail -->
-	<noopStep name="file not found" />
+	<setContextData name="file not found error"
+		targetDataDef="errorMsg"
+		valueExpression="${fileToIngest.absolutePath} not found in given CSV."
+		nextStep="log failure to file"
+	/>
 	
-	<noopStep name="duplicate found" />
+	
+	<setContextData name="duplicate found error"
+		targetDataDef="errorMsg"
+		valueExpression="Duplicate of ${fileToIngest.name} found. Duplicate asset's id: ${duplicates[0].id.toString()}"
+		nextStep="log failure to file"
+	/>
+	
+	<executeSubflowStep name="log failure to file"
+		targetWorkflowId="writeToLogFile"
+		nextStep="failed to ingest"
+	>
+		<subflowContextDataMapping parentDataDef="fileToIngest"     subflowDataDef="file" />
+		<subflowContextDataMapping parentDataDef="errorMsg"         subflowDataDef="errorMsg" />
+		<subflowContextDataMapping parentDataDef="errorLogFile"     subflowDataDef="errorLogFile" />
+	</executeSubflowStep>
 	
 	<failWorkflowStep name="failed to ingest"
 		executionLabelExpression="Failed to ingest"
@@ -182,7 +213,7 @@
 	
 	<!-- .......... Input Variables .......... -->
 	<!-- workflow inputs -->
-	<contextDataDef name="assetInfoJsons"           dataType="JSON"         multiple="true" />
+	<contextDataDef name="assetInfoJsons"           dataType="JSON"         multiple="true"  userInput="true"/>
 	
 	<!-- metadata options -->
 	<contextDataDef name="failOnMetadataError"      dataType="Boolean"/>
@@ -260,6 +291,8 @@
 	<contextDataDef name="proxiesSubflow"           dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.proxiesWorkflow') ?: '_createProxiesAnyAsset'}"/>
 	
 	<contextDataDef name="duplicates"               dataType="Data Object"  multiple="true" />
+	<contextDataDef name="errorMsg"                 dataType="String" />
+	<contextDataDef name="errorLogFile"             dataType="File" />
 	
 	<!-- ..... Deprecated But Supported ...... -->
 	<contextDataDef name="assetForVersioning"       dataType="Data Object"/>
