@@ -35,7 +35,7 @@
 		resultDataDef="jsonMetadata"
 		devStep="true"
 	>
-		<transition condition="${jsonMetadata != null}">
+		<transition condition="${jsonMetadata.size() &gt; 0}">
 			<targetStepName>check for duplicate asset</targetStepName>
 		</transition>
 		<transition condition="${true}">
@@ -47,7 +47,7 @@
 				def metadata = [:]
 			
 				assetInfoJsons.any { file ->
-					if (file.get('fileName').asText().equals(fileToIngest))
+					if (file.get('fileName').asText().equals(fileToIngest.name))
 						metadata = file.metadata
 				}
 			
@@ -115,8 +115,10 @@
 	/>
 	
 	<executeSubflowStep name="ingest"
-		executionLabelExpression="Ingest ${fileToIngest}"
+		executionLabelExpression="Ingest ${fileToIngest.name}"
 		targetWorkflowId="${ingestSubflow}"
+		subjectChangePath="${fileToIngest}"
+		subflowTargetDataDef="fileToIngest"
 		nextStep="end"
 	>
 		<!-- ingest -->
@@ -151,6 +153,8 @@
 		<subflowContextDataMapping parentDataDef="documentThumbArguments"   subflowDataDef="documentThumbArguments"/>
 	</executeSubflowStep>
 	
+	<!--<noopStep name="ingest" />-->
+	
 	<!-- ................................................... End Steps .................................................... -->
 	<!-- fail -->
 	<noopStep name="file not found" />
@@ -166,7 +170,7 @@
 	<noopStep name="end" />
 	<!-- ................................................... Data Defs .................................................... -->
 	<!-- ....... User Input Variables ........ -->
-	<contextDataDef name="fileToIngest" 		    dataType="String"				userInput="true"    label="File To Ingest"   required="true" displayIndex="1" />
+	<contextDataDef name="fileToIngest" 		    dataType="File"				userInput="true"    label="File To Ingest"   required="true" displayIndex="1" />
 	<contextDataDef name="collections"              dataType="Data Object"      userInput="true"    label="Collections"      multiple="true" displayIndex="2" >
 		<picklist>
 			<dataObjectSearch dataObjectClass="AssetCollection">
