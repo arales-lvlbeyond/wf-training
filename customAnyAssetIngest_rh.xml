@@ -141,7 +141,7 @@
                         subflowTargetDataDef="asset"
                         executionLabelExpression="Add any collections, categories, and metadata for ${assetMaster}"
                         pctComplete="50"
-                        nextStep="create proxies"
+                        nextStep="add category to asset"
     >
         <subflowContextDataMapping parentDataDef="failOnMetadataError"      subflowDataDef="failOnError"/>
         <subflowContextDataMapping parentDataDef="collections"              subflowDataDef="collections"/>
@@ -154,6 +154,23 @@
         <subflowContextDataMapping parentDataDef="fileSpecificMetadata" subflowDataDef="jsonMetadata"/>
     </executeSubflowStep>
 
+<!--    <executeSubflowStep name="add category"-->
+<!--                        targetWorkflowId="addAssetToCategory_rh"-->
+<!--                        executionLabelExpression=" adding category ${fileSpecificMetadata.categoryName}"-->
+<!--                        subflowTargetDataDef="categoryName"-->
+<!--                        subjectChangePath="${assetMaster}"-->
+<!--                        nextStep="create proxies"-->
+<!--    >-->
+<!--        <subflowContextDataMapping parentDataDef="fileSpecificMetadata" subflowDataDef="fileSpecificMetadata"/>-->
+<!--        <subflowContextDataMapping parentDataDef="categoryName" subflowDataDef="categoryName"/>-->
+<!--    </executeSubflowStep>-->
+    <nimbus:changeMetaCategoryStep
+            name="add category to asset"
+            targetObjectExpression="${assetMaster}"
+            executionLabelExpression="adding category ${categoryName}"
+            nextStep="create proxies">
+        <nimbus:addCategory>${categoryName?.equals('Null') ? 'no department' : categoryName}</nimbus:addCategory>
+    </nimbus:changeMetaCategoryStep>
 
     <executeSubflowStep name="create proxies"
                         targetWorkflowId="${proxiesSubflow}"
@@ -213,6 +230,7 @@
     </contextDataDef>
     <contextDataDef name="metadataForm"             dataType="MetadataForm"     userInput="true"    label="Metadata Form" displayIndex="3" />
 
+
     <!-- .......... Input Variables .......... -->
     <!-- metadata options -->
     <contextDataDef name="CsvMap" dataType="JSON" />
@@ -221,6 +239,7 @@
     <contextDataDef name="failOnMetadataError"      dataType="Boolean"/>
     <contextDataDef name="categories"               dataType="Data Object"      multiple="true"/>
     <contextDataDef name="categoryNames"            dataType="String"           multiple="true"/>
+    <contextDataDef name="categoryName" dataType="String"  defaultDataExpression="${fileSpecificMetadata?.category}"/>
     <contextDataDef name="jsonMetadata"             dataType="JSON">
         <description>
             Single JSON where:
@@ -291,7 +310,7 @@
     <contextDataDef name="assetMaster" 			    dataType="Data Object"/>
     <contextDataDef name="ingestSubflow"            dataType="String"           defaultDataExpression="${'customBaseAssetIngest_rh'}"/>
     <contextDataDef name="metadataSubflow"          dataType="String"           defaultDataExpression="${'_saveAnyAssetMetadata'}"/>
-    <contextDataDef name="proxiesSubflow"           dataType="String"           defaultDataExpression="${#sysconfig('workflows.default.ingestAsset.proxiesWorkflow') ?: '_createProxiesAnyAsset'}"/>
+    <contextDataDef name="proxiesSubflow"           dataType="String"           defaultDataExpression="${'customCreateProxiesAnyAsset_rh'}"/>
 
     <!-- ..... Deprecated But Supported ...... -->
     <contextDataDef name="assetForVersioning"       dataType="Data Object"/>
