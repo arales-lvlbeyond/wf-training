@@ -1,0 +1,60 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="Ex7Subflowrh"
+          name="Ex7Subflowrh"
+          executionLabelExpression="Ex7Subflowrh | ${assetMaster.name} | ${assetMaster.assetType} "
+          subjectDOClassName="AssetMaster"
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>display asset information</initialStepName>
+
+    <noopStep name="display asset information"
+              executionLabelExpression="Asset Name: ${assetMaster.name} | Asset type: ${assetMaster.assetType} | ${testValueA}"
+              nextStep="any asset subflow"
+    />
+
+    <!--TODO: call another subflow for mezz-->
+    <executeSubflowStep name="any asset subflow"
+                        targetWorkflowId="_createProxiesAnyAsset"
+                        subjectChangePath="${assetMaster}"
+                        executionLabelExpression="create mezz for ${assetName}"
+                        nextStep="end"
+    >
+
+    </executeSubflowStep>
+
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+
+
+    <!-- ................................................... Data Defs .................................................... -->
+    <!-- ............ INPUT ............. -->
+
+
+    <!-- ......... PROCESSING ........... -->
+    <contextDataDef name="assetMaster"              dataType="Data Object"          defaultDataExpression="${subject}" />
+    <contextDataDef name="testValueA"               dataType="Integer"               defaultDataExpression="${assetMaster.metadata.testValueA}" />
+    <contextDataDef name="mezzFile"                 dataType="File"           />
+</workflow>

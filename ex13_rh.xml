@@ -1,0 +1,75 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="ex13_rh"
+          name="ex13_rh"
+          executionLabelExpression="ex13_rh | "
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>call metadata api</initialStepName>
+
+
+    <submitHttpStep name="call metadata api"
+                    urlExpression="https://re23x.levelsbeyond.com/reachengine/api/metadata-properties?includeArchived=false&amp;editOnly=false&amp;viewOnly=false&amp;inspectorOnly=false&amp;sortDirection=ASC"
+                    requestMethodExpression="GET"
+                    responsePayloadDataDef="jsonMetadata"
+                    executionLabelExpression="Retrieving list of all metadata properties"
+                    responseCodeDataDef="responseCode"
+                    nextStep="response successful check"
+
+                    >
+        <requestHeader name="apiKey">${api_key}</requestHeader>
+        <requestHeader name="Content-Type">application/json</requestHeader>
+    </submitHttpStep>
+
+
+    <noopStep name="response successful check">
+        <transition condition="${responseCode == 200}" >
+            <targetStepName>end</targetStepName>
+        </transition>
+        <transition condition="${true}">
+            <targetStepName>failed http req</targetStepName>
+        </transition>
+    </noopStep>
+
+    <failWorkflowStep name="failed http req"
+                      executionLabelExpression="http request failed: ${apiRequest}"
+                      reasonExpression="http request failed: ${apiRequest}" />
+
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+
+
+    <!-- ................................................... Data Defs .................................................... -->
+    <!-- ............ INPUT ............. -->
+
+
+    <!-- ......... PROCESSING ........... -->
+    <contextDataDef name="jsonMetadata" dataType="JSON" />
+    <contextDataDef name="response code" dataType="Integer" />
+    <contextDataDef name="apiRequest" dataType="String" defaultDataExpression="https://re23x.levelsbeyond.com/reachengine/api/metadata-properties?includeArchived=false&amp;editOnly=false&amp;viewOnly=false&amp;inspectorOnly=false&amp;sortDirection=ASC"/>
+
+    <contextDataDef name="api_key" dataType="String" defaultDataExpression="cf025717-b285-43a4-af69-f09552bfa4d9" />
+</workflow>

@@ -1,0 +1,301 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="customAnyDirectoryIngest_rh"
+          name="customAnyDirectoryIngest_rh"
+          executionLabelExpression="customAnyDirectoryIngest_rh | "
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion=""
+          group="Rob"
+>
+
+    <initialStepName>check if workflow is running</initialStepName>
+
+
+    <!-- ................................................... Initial Checks .................................................... -->
+    <queryStep name="check if workflow is running"
+               targetDataObjectClass="WorkflowExecution"
+               resultDataDef="currentExecutions"
+               pctComplete="1"
+               executionLabelExpression="Is a workflow running on this directory already? ${currentExecutions.size() != 0}"
+    >
+        <transition condition="${currentExecutions.size() == 0}">
+            <targetStepName>check if directory is empty</targetStepName>
+        </transition>
+        <transition condition="true">
+            <targetStepName>workflow is running</targetStepName>
+        </transition>
+
+        <criteria>
+            <![CDATA[
+                <criteria>
+                    <and>
+                        <condition property="workflowVersion.workflow.key" op="eq">
+                            <test value="${ #this.workflow.workflowVersion.workflow.key }" />
+                        </condition>
+                        <condition property="uuid" op="noteq">
+                            <test value="${ #this.workflow.uuid }" />
+                        </condition>
+                        <condition property="executionLabel" op="like">
+							<test value="%${T(org.apache.commons.lang.StringEscapeUtils).escapeXml(directoryToIngest.absolutePath)}%" />
+						</condition>
+                        <condition property="status" op="in">
+                            <tests>
+                                <test value="CREATED" />
+                                <test value="QUEUED" />
+                                <test value="EXECUTING" />
+                            </tests>
+                        </condition>
+                    </and>
+                </criteria>
+            ]]>
+        </criteria>
+    </queryStep>
+
+
+    <setContextData name="check if directory is empty"
+                    targetDataDef="originalCount"
+                    valueExpression="${filesToIngest.size()}"
+                    pctComplete="2"
+                    executionLabelExpression="are there files in the directory? ${filesToIngest != null AND filesToIngest.size() &gt; 0}"
+    >
+        <transition condition="${filesToIngest != null AND filesToIngest.size() &gt; 0}">
+            <targetStepName>query for running subflows</targetStepName>
+        </transition>
+        <transition condition="true">
+            <targetStepName>no files to process</targetStepName>
+        </transition>
+    </setContextData>
+
+
+    <!-- ................................................... Queue Loop ................................................... -->
+    <queryStep name="query for running subflows"
+               targetDataObjectClass="WorkflowExecution"
+               resultDataDef="executingSubflows"
+               executionLabelExpression="checking for workflows (with name = ${subflowName}) that match this directory that are also not in a finished state"
+               pctCompleteExpression="${99*((originalCount-filesToIngest.size())/originalCount)}"
+               devStep="false"
+    >
+        <criteria>
+            <![CDATA[
+            <criteria>
+                <and>
+                    <condition property="workflowVersion.workflow.key" op="eq">
+                        <test value="${ingestSubflow}"/>
+                    </condition>
+                    <condition property="executionLabel" op="like">
+							<test value="%${T(org.apache.commons.lang.StringEscapeUtils).escapeXml(directoryToIngest.absolutePath)}%" />
+						</condition>
+                    <condition property="status" op="in">
+                        <tests>
+                            <test value="CREATED" />
+                            <test value="QUEUED" />
+                            <test value="EXECUTING" />
+                         </tests>
+                    </condition>
+                </and>
+            </criteria>
+            ]]>
+        </criteria>
+
+        <transition condition="${ executingSubflows.size() &lt; queueLimit }">
+            <targetStepName>process files</targetStepName>
+        </transition>
+        <transition condition="${ true }">
+            <targetStepName>queue full</targetStepName>
+        </transition>
+    </queryStep>
+
+    <delayStep name="queue full"
+               delaySecondsExpression="${ queryPollInterval }"
+               executionLabelExpression="${filesToIngest.size()} assets remaining | Subflows running: ${executingSubflows.size()}/${queueLimit} | Waiting ${queryPollInterval} seconds."
+               pctCompleteExpression="${99*((originalCount-filesToIngest.size())/originalCount)}"
+               nextStep="query for running subflows"
+    />
+    <!--  End queue loop  -->
+
+
+    <executeSubflowStep name="process files"
+                        executionLabelExpression="Ingesting ${filesToIngest.size() &gt; (queueLimit - executingSubflows.size()) ? (queueLimit - executingSubflows.size()) : filesToIngest.size()} Files"
+                        targetWorkflowId="${ingestSubflow}"
+                        subjectChangePath="${filesToIngest.size() &gt; (queueLimit - executingSubflows.size()) ? filesToIngest.subList(0, (queueLimit - executingSubflows.size())) : filesToIngest.subList(0, filesToIngest.size())}"
+                        subflowTargetDataDef="fileToIngest"
+                        waitForCompletionExpression="false"
+                        pctCompleteExpression="${99*((originalCount-filesToIngest.size())/originalCount)}"
+    >
+        <!-- ingest -->
+        <subflowContextDataMapping parentDataDef="sourceAsMezz"             subflowDataDef="sourceAsMezz"/>
+        <subflowContextDataMapping parentDataDef="checkForDuplicate"        subflowDataDef="checkForDuplicate"/>
+        <subflowContextDataMapping parentDataDef="overwriteExisting"        subflowDataDef="overwriteExisting"/>
+        <subflowContextDataMapping parentDataDef="versionDuplicate"         subflowDataDef="versionDuplicate"/>
+        <!-- metadata -->
+        <subflowContextDataMapping parentDataDef="failOnMetadataError"      subflowDataDef="failOnMetadataError"/>
+        <subflowContextDataMapping parentDataDef="collections"              subflowDataDef="collections"/>
+        <subflowContextDataMapping parentDataDef="metadataForm"             subflowDataDef="metadataForm"/>
+        <subflowContextDataMapping parentDataDef="metadataFormType"         subflowDataDef="metadataFormType"/>
+        <subflowContextDataMapping parentDataDef="categories"               subflowDataDef="categories"/>
+        <subflowContextDataMapping parentDataDef="categoryNames"            subflowDataDef="categoryNames"/>
+        <subflowContextDataMapping parentDataDef="jsonMetadata"             subflowDataDef="jsonMetadata"/>
+        <subflowContextDataMapping parentDataDef="linkMetadata"             subflowDataDef="linkMetadata"/>
+        <!-- proxies -->
+        <subflowContextDataMapping parentDataDef="failOnProxiesError"       subflowDataDef="failOnProxiesError"/>
+        <subflowContextDataMapping parentDataDef="prioritiesJson"           subflowDataDef="prioritiesJson"/>
+        <subflowContextDataMapping parentDataDef="createMezz"               subflowDataDef="createMezz"/>
+        <subflowContextDataMapping parentDataDef="createProxy"              subflowDataDef="createProxy"/>
+        <subflowContextDataMapping parentDataDef="createThumbVideo"         subflowDataDef="createThumbVideo"/>
+        <subflowContextDataMapping parentDataDef="createThumb"              subflowDataDef="createThumb"/>
+        <subflowContextDataMapping parentDataDef="videoMezzTemplate"        subflowDataDef="videoMezzTemplate"/>
+        <subflowContextDataMapping parentDataDef="videoProxyTemplate"       subflowDataDef="videoProxyTemplate"/>
+        <subflowContextDataMapping parentDataDef="videoThumbVideoTemplate"  subflowDataDef="videoThumbVideoTemplate"/>
+        <subflowContextDataMapping parentDataDef="videoThumbnailPercentage" subflowDataDef="videoThumbnailPercentage"/>
+        <subflowContextDataMapping parentDataDef="audioProxyTemplate"       subflowDataDef="audioProxyTemplate"/>
+        <subflowContextDataMapping parentDataDef="imageProxyArguments"      subflowDataDef="imageProxyArguments"/>
+        <subflowContextDataMapping parentDataDef="imageThumbArguments"      subflowDataDef="imageThumbArguments"/>
+        <subflowContextDataMapping parentDataDef="documentProxyArguments"   subflowDataDef="documentProxyArguments"/>
+        <subflowContextDataMapping parentDataDef="documentThumbArguments"   subflowDataDef="documentThumbArguments"/>
+        <subflowContextDataMapping parentDataDef="CsvMap" subflowDataDef="CsvMap"/>
+
+        <transition condition="${filesToIngest.size() &gt; (queueLimit - executingSubflows.size())}">
+            <targetStepName>reduce array</targetStepName>
+        </transition>
+        <transition condition="${true}">
+            <targetStepName>end</targetStepName>
+        </transition>
+    </executeSubflowStep>
+
+    <setContextData name="reduce array"
+                    targetDataDef="filesToIngest"
+                    valueExpression="${filesToIngest.subList((queueLimit - executingSubflows.size()), filesToIngest.size())}"
+                    pctCompleteExpression="${99*((originalCount-filesToIngest.size())/originalCount)}"
+                    executionLabelExpression="${filesToIngest.size()} Files Remaining"
+                    nextStep="query for running subflows"/>
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="no files to process"
+              executionLabelExpression="No files in ${directoryToIngest.absolutePath}."
+              pctComplete="99"
+              nextStep="end"
+    />
+
+
+    <noopStep name="end"    pctComplete="100"/>
+
+
+    <!-- fail -->
+    <failWorkflowStep name="workflow is running"
+                      executionLabelExpression="Workflow already executing on the directory"
+                      reasonExpression="Workflow already executing on the directory"
+    />
+
+
+    <!-- ............................................... Context Data Defs ................................................ -->
+    <!-- ....... User Input Variables ........ -->
+    <contextDataDef name="directoryToIngest" 		dataType="Directory"	userInput="true"    label="Directory To Ingest"  required="true" displayIndex="1" />
+    <contextDataDef name="collections"              dataType="Data Object"  userInput="true"    label="Collections"          multiple="true" displayIndex="2" >
+        <picklist>
+            <dataObjectSearch dataObjectClass="AssetCollection">
+                <searchPath>name</searchPath>
+            </dataObjectSearch>
+        </picklist>
+    </contextDataDef>
+    <contextDataDef name="metadataForm"             dataType="MetadataForm" userInput="true"    label="Metadata Form" displayIndex="3" />
+
+    <!-- .......... Input Variables .......... -->
+    <!-- metadata options -->
+    <contextDataDef name="failOnMetadataError"      dataType="Boolean"/>
+    <contextDataDef name="categories"               dataType="Data Object"  multiple="true"/>
+    <contextDataDef name="categoryNames"            dataType="String"           multiple="true"/>
+    <contextDataDef name="jsonMetadata"             dataType="JSON">
+        <description>
+            Single JSON where:
+            Keys are metadata property names
+            Values are what to set the matching property to on this asset
+        </description>
+    </contextDataDef>
+    <contextDataDef name="linkMetadata"             dataType="JSON"             multiple="true">
+        <description>
+            Array of JSONs where:
+            Each JSON has 2 Keys (propertyName and linkInfo):
+            propertyName's value is a metadata property name of type link
+            linkInfo's value is a JSON with 2 keys (title and url):
+            title's value is the display name for the link
+            url's value is the url to open when the title is clicked on
+        </description>
+    </contextDataDef>
+    <contextDataDef name="metadataFormType"         dataType="String"           defaultDataExpression="access">
+        <description>
+            TEMPORARY!!! (Forms will be standardized to the same format in the future)
+            Valid types = "access" or "panel"
+        </description>
+    </contextDataDef>
+    <!-- ingest options (defaults in subflow) -->
+    <contextDataDef name="sourceAsMezz"             dataType="Boolean"/>
+    <contextDataDef name="checkForDuplicate"        dataType="Boolean"/>
+    <contextDataDef name="overwriteExisting"        dataType="Boolean"/>
+    <contextDataDef name="versionDuplicate"         dataType="Boolean"/>
+    <!-- transcode options -->
+    <contextDataDef name="failOnProxiesError"       dataType="Boolean"/>
+    <contextDataDef name="asyncProxies"             dataType="Boolean"/>
+    <!-- create proxies? (defaults in subflows) -->
+    <contextDataDef name="prioritiesJson"           dataType="JSON">
+        <description>
+            A JSON with the structure:
+            {"mezzanine":w, "proxy":x, "thumbnailVideo":y, "thumbnail":z}
+        </description>
+    </contextDataDef>
+    <contextDataDef name="createMezz"               dataType="Boolean"/>
+    <contextDataDef name="createProxy"              dataType="Boolean"/>
+    <contextDataDef name="createThumb"              dataType="Boolean"/>
+    <contextDataDef name="createThumbVideo"         dataType="Boolean"/>
+    <!-- supply a file for proxies? -->
+    <contextDataDef name="mezzFile"                 dataType="File"/>
+    <contextDataDef name="proxyFile"                dataType="File"/>
+    <contextDataDef name="thumbFile"                dataType="File"/>
+    <contextDataDef name="thumbVideoFile"           dataType="File"/>
+    <!-- Templates/Args for proxies creation (defaults in subflows) -->
+    <contextDataDef name="videoMezzTemplate"    	dataType="String"/>
+    <contextDataDef name="videoProxyTemplate"    	dataType="String"/>
+    <contextDataDef name="videoThumbVideoTemplate"  dataType="String"/>
+    <contextDataDef name="videoThumbnailPercentage" dataType="Integer"/>
+    <contextDataDef name="audioProxyTemplate"       dataType="String"/>
+    <contextDataDef name="imageProxyArguments"      dataType="String"/>
+    <contextDataDef name="imageThumbArguments"      dataType="String"/>
+    <contextDataDef name="documentProxyArguments"   dataType="String"/>
+    <contextDataDef name="documentThumbArguments"   dataType="String"/>
+
+    <!-- ....... Processing Variables ........ -->
+    <contextDataDef name="currentExecutions" 	    dataType="Data Object" 	multiple="true"/>
+    <contextDataDef name="filesToIngest" 		    dataType="String"		    multiple="true"     defaultDataExpression="${#walkDir(directoryToIngest, null)}"/>
+    <contextDataDef name="originalCount"            dataType="Double"/>
+
+    <contextDataDef name="CsvMap" dataType="JSON" />
+    <!-- queue loop variables -->
+    <contextDataDef name="ingestSubflow"      	    dataType="String" 		defaultDataExpression="${'customAnyAssetIngest_rh'}"/>
+
+    <!--    Loop   -->
+    <contextDataDef name="executingSubflows"       dataType="Data Object"    multiple="true"/>
+    <contextDataDef name="queueLimit" 			    dataType="Integer" 		defaultDataExpression="${#sysconfig('workflows.default.ingestDirectory.queueLimit') ?: 100}"/>
+    <contextDataDef name="queryPollInterval"  	    dataType="Integer" 		defaultDataExpression="${#sysconfig('workflows.default.ingestDirectory.queryPollInterval') ?: 10}"/>
+
+
+
+</workflow>

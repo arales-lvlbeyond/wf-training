@@ -1,0 +1,209 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="DirectoryIngestBasic"
+          name="DirectoryIngestBasic"
+          executionLabelExpression="DirectoryIngestBasic | "
+          group="Rob"
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>copy csv to tempdir</initialStepName>
+
+    <copyFileStep name="copy csv to tempdir"
+                  executionLabelExpression="copied csv to tempdir"
+                  sourceFileExpression="${csvFile}"
+                  targetDirectoryExpression="/reachengine/media/"
+                  nextStep="copy jsonMap to tempdir"
+                  resultDataDef="tmpCsvFile" />
+    <copyFileStep name="copy jsonMap to tempdir"
+                  executionLabelExpression="Copied jsonMap to tempdir"
+                  sourceFileExpression="${jsonMap}"
+                  targetDirectoryExpression="/reachengine/media"
+                  nextStep="build csv map"
+                  resultDataDef="tmpJsonFile" />
+
+    <groovyStep name="build csv map"
+                resultDataDef="CsvMap"
+                nextStep="Any Directory Ingest"
+                executionLabelExpression="Building CSV -> JSON Mapping" >
+        <script>
+            <![CDATA[
+            import groovy.*
+            import groovy.json.*
+            def csvToJsonMap = [:]                                  //mapping will be key from header paired with mapping built from provided keymap
+            def file = new File(csvpath)
+            def line;
+            def values = []
+            file.withReader { reader ->
+                line = reader.readLine()                            //get line header
+                values = line.split(",")
+                //split header line into values
+                headerMap = [:]                                     //define a map to hold headers and values
+                values.each{ val ->
+                    headerMap[val] = ''                             //set all headers as map with default empty value
+                }
+                //iterate through csv
+                while ((line = reader.readLine()) != null) {
+                    line = line.replace(",,",",Null,")              //replace empty values with null
+                    if(line[line.size()-1] == ",")                  //replace empty trailing value on line
+                        line+="Null"
+                    //split values from line
+                    values = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*\$)");
+                    headerMap.eachWithIndex{ key,value, index ->
+                        headerMap.put(key,values[index])            //set all headers with a value
+                    }
+                    def uniqueKeyValue = headerMap[uniqueKey]       //get the unique key value per each entry
+                    def tmpMap = [:]                                //create tmpMap tp map to csv map
+                    //create tmp map that we will add to main csvMap using json map provided
+                    xmlMapping.fieldNames().each { key ->
+                        if (headerMap.containsKey(key.toString()) && headerMap."$key".toString().length() != 0) {
+                            if(xmlMapping."$key" instanceof Boolean) //<--------------- hard coded fix? why is this issue happening
+                                tmpMap.put("shortDescription", headerMap."$key".toString())
+                            else
+                                tmpMap.put(xmlMapping."$key".textValue(), headerMap."$key".toString())
+                        }
+                    }
+                    csvToJsonMap.put(uniqueKeyValue,tmpMap)          //add tmp map to main csvMap
+                }
+            }
+            return csvToJsonMap                                     //return the csvMap
+            ]]>
+        </script>
+
+    </groovyStep>
+
+    <executeSubflowStep name="Any Directory Ingest" targetWorkflowId="customAnyDirectoryIngest_rh" nextStep="end">
+        <subflowContextDataMapping parentDataDef="directory" subflowDataDef="directoryToIngest"/>
+        <subflowContextDataMapping parentDataDef="CsvMap" subflowDataDef="CsvMap"/>
+
+
+    </executeSubflowStep>
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+
+
+    <!-- ................................................... Data Defs .................................................... -->
+    <!-- ............ INPUT ............. -->
+    <contextDataDef name="directory" dataType="Directory"   userInput="true" />
+    <contextDataDef name="uniqueKey"         dataType="String"       defaultDataExpression="fileName"/>
+    <contextDataDef name="jsonMap"           dataType="File"         userInput="true"       label="JSON Mapping File"/>
+    <contextDataDef name="csvFile"           dataType="File"         userInput="true"       label="CSV to Map to JSON"/>
+    <contextDataDef name="csvpath"              dataType="String"           defaultDataExpression="${tmpCsvFile?.absolutePath}"/>
+    <contextDataDef name="tmpCsvFile"           dataType="File"/>
+    <contextDataDef name="tmpJsonFile"          dataType="JSON"/>
+    <contextDataDef name="tmpDir"               dataType="String"           defaultDataExpression="/reachengine/media/"/>
+    <contextDataDef name="xmlMapping"
+                    dataType="JSON"
+                    defaultDataExpression="${T(org.apache.commons.io.IOUtils).toString(jsonMap.toFile().createInputStream(), T(java.nio.charset.Charset).forName('UTF-8'))}"/>
+    <contextDataDef name="CsvMap"               dataType="JSON"/>
+
+    <contextDataDef name="collections"              dataType="Data Object"  userInput="true"    label="Collections"          multiple="true" displayIndex="2" >
+        <picklist>
+            <dataObjectSearch dataObjectClass="AssetCollection">
+                <searchPath>name</searchPath>
+            </dataObjectSearch>
+        </picklist>
+    </contextDataDef>
+    <contextDataDef name="metadataForm"             dataType="MetadataForm" userInput="true"    label="Metadata Form" displayIndex="3" />
+
+    <!-- .......... Input Variables .......... -->
+    <!-- metadata options -->
+    <contextDataDef name="failOnMetadataError"      dataType="Boolean"/>
+    <contextDataDef name="categories"               dataType="Data Object"  multiple="true"/>
+    <contextDataDef name="categoryNames"            dataType="String"           multiple="true"/>
+    <contextDataDef name="jsonMetadata"             dataType="JSON">
+        <description>
+            Single JSON where:
+            Keys are metadata property names
+            Values are what to set the matching property to on this asset
+        </description>
+    </contextDataDef>
+    <contextDataDef name="linkMetadata"             dataType="JSON"             multiple="true">
+        <description>
+            Array of JSONs where:
+            Each JSON has 2 Keys (propertyName and linkInfo):
+            propertyName's value is a metadata property name of type link
+            linkInfo's value is a JSON with 2 keys (title and url):
+            title's value is the display name for the link
+            url's value is the url to open when the title is clicked on
+        </description>
+    </contextDataDef>
+    <contextDataDef name="metadataFormType"         dataType="String"           defaultDataExpression="access">
+        <description>
+            TEMPORARY!!! (Forms will be standardized to the same format in the future)
+            Valid types = "access" or "panel"
+        </description>
+    </contextDataDef>
+    <!-- ingest options (defaults in subflow) -->
+    <contextDataDef name="sourceAsMezz"             dataType="Boolean"/>
+    <contextDataDef name="checkForDuplicate"        dataType="Boolean"/>
+    <contextDataDef name="overwriteExisting"        dataType="Boolean"/>
+    <contextDataDef name="versionDuplicate"         dataType="Boolean"/>
+    <!-- transcode options -->
+    <contextDataDef name="failOnProxiesError"       dataType="Boolean"/>
+    <contextDataDef name="asyncProxies"             dataType="Boolean"/>
+    <!-- create proxies? (defaults in subflows) -->
+    <contextDataDef name="prioritiesJson"           dataType="JSON">
+        <description>
+            A JSON with the structure:
+            {"mezzanine":w, "proxy":x, "thumbnailVideo":y, "thumbnail":z}
+        </description>
+    </contextDataDef>
+    <contextDataDef name="createMezz"               dataType="Boolean"/>
+    <contextDataDef name="createProxy"              dataType="Boolean"/>
+    <contextDataDef name="createThumb"              dataType="Boolean"/>
+    <contextDataDef name="createThumbVideo"         dataType="Boolean"/>
+    <!-- supply a file for proxies? -->
+    <contextDataDef name="mezzFile"                 dataType="File"/>
+    <contextDataDef name="proxyFile"                dataType="File"/>
+    <contextDataDef name="thumbFile"                dataType="File"/>
+    <contextDataDef name="thumbVideoFile"           dataType="File"/>
+    <!-- Templates/Args for proxies creation (defaults in subflows) -->
+    <contextDataDef name="videoMezzTemplate"    	dataType="String"/>
+    <contextDataDef name="videoProxyTemplate"    	dataType="String"/>
+    <contextDataDef name="videoThumbVideoTemplate"  dataType="String"/>
+    <contextDataDef name="videoThumbnailPercentage" dataType="Integer"/>
+    <contextDataDef name="audioProxyTemplate"       dataType="String"/>
+    <contextDataDef name="imageProxyArguments"      dataType="String"/>
+    <contextDataDef name="imageThumbArguments"      dataType="String"/>
+    <contextDataDef name="documentProxyArguments"   dataType="String"/>
+    <contextDataDef name="documentThumbArguments"   dataType="String"/>
+
+    <!-- ....... Processing Variables ........ -->
+    <contextDataDef name="currentExecutions" 	    dataType="Data Object" 	multiple="true"/>
+    <contextDataDef name="filesToIngest" 		    dataType="String"		    multiple="true"     defaultDataExpression="${#walkDir(directory, null)}"/>
+    <contextDataDef name="originalCount"            dataType="Double"/>
+    <!-- queue loop variables -->
+    <contextDataDef name="ingestSubflow"      	    dataType="String" 		defaultDataExpression="${#sysconfig('workflows.default.ingestAssetWorkflow') ?: '_anyAssetIngest'}"/>
+
+    <!--    Loop   -->
+    <contextDataDef name="executingSubflows"       dataType="Data Object"    multiple="true"/>
+    <contextDataDef name="queueLimit" 			    dataType="Integer" 		defaultDataExpression="${#sysconfig('workflows.default.ingestDirectory.queueLimit') ?: 100}"/>
+    <contextDataDef name="queryPollInterval"  	    dataType="Integer" 		defaultDataExpression="${#sysconfig('workflows.default.ingestDirectory.queryPollInterval') ?: 10}"/>
+
+
+
+
+</workflow>

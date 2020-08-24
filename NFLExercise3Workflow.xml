@@ -1,0 +1,92 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="NFLExercise3Workflow"
+          name="CollectionLoopTest"
+          executionLabelExpression="CollectionLoopTest | "
+          subjectDOClassName="AssetCollection"
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>find collection name</initialStepName>
+
+    <noopStep name="find collection name"
+              executionLabelExpression="Selected Collection: ${subject.name} | number of assets: ${totalAssets}"
+              nextStep="find number of times to loop"
+    />
+
+    <setContextData name="find number of times to loop"
+              targetDataDef="numberOfLoops"
+              valueExpression="${subject.items.size()}"
+              nextStep="display number of loops to perform"
+    />
+
+    <noopStep name="display number of loops to perform"
+              executionLabelExpression="Looping ${numberOfLoops} times"
+              nextStep="set current asset"
+    />
+
+    <setContextData name="set current asset"
+                    targetDataDef="currentFile"
+                    valueExpression="${subject.items[counter].asset}"
+                    nextStep="show asset info"
+    />
+
+    <noopStep name="show asset info"
+              executionLabelExpression="Current File: ${currentFile} | Asset Type: ${fileType} | Loop Interval: ${counter + 1}"
+              nextStep="counter increment"
+    />
+
+
+    <setContextData name="counter increment"
+                    targetDataDef="counter"
+                    valueExpression="${counter + 1}"
+    >
+
+        <transition condition="${counter &lt; numberOfLoops }">
+            <targetStepName>set current asset</targetStepName>
+        </transition>
+        <transition condition="${true}">
+            <targetStepName>looping finished</targetStepName>
+        </transition>
+    </setContextData>
+
+    <noopStep name="looping finished" nextStep="end" />
+
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+
+
+    <!-- ................................................... Data Defs .................................................... -->
+    <!-- ............ INPUT ............. -->
+    <contextDataDef name="numberOfLoops"        dataType="Integer"      defaultDataExpression="${subject.items.size()}" />
+    <contextDataDef name="totalAssets"          dataType="Integer"      defaultDataExpression="${subject.items.size()}" />
+    <contextDataDef name="counter"              dataType="Integer"      defaultDataExpression="0" />
+    <contextDataDef name="currentFile"          dataType="Data Object"  defaultDataExpression="${subject.items[0].asset}"/>
+    <contextDataDef name="fileType"             dataType="String"       defaultDataExpression="${currentFile.assetType}" />
+    <contextDataDef name="metadataTestValueA"   dataType="Integer"      defaultDataExpression="${currentFile.metadata.testValueA}" />
+
+    <!-- ......... PROCESSING ........... -->
+
+
+</workflow>

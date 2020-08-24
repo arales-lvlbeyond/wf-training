@@ -1,0 +1,172 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="extractFileMetadataInDirectory_rh"
+          name="extractFileMetadataInDirectory_rh"
+          executionLabelExpression="extractFileMetadataInDirectory_rh | "
+          subjectDOClassName=""
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>copy csv to tmpdir</initialStepName>
+
+    <copyFileStep name="copy csv to tmpdir"
+                  sourceFileExpression="${csvMetadataFile}"
+                  executionLabelExpression="Copying csv to ${tmpDir}"
+                  targetDirectoryExpression="/reachengine/media/"
+                  nextStep="copy jsonMap to tmpdir"
+                  resultDataDef="tmpCsvFile"/>
+
+    <copyFileStep name="copy jsonMap to tmpdir"
+                  sourceFileExpression="${metadataMapJson}"
+                  executionLabelExpression="Copying jsonMap to ${tmpdir}"
+                  targetDirectoryExpression="/reachengine/media/"
+                  nextStep="copy asset to tmpdir"
+                  resultDataDef="tmpJsonMap"
+    />
+
+    <copyFileStep name="copy asset to tmpdir"
+                  sourceFileExpression="${directoryAsset}"
+                  executionLabelExpression="Copying asset to ${tmpdir}"
+                  targetDirectoryExpression="/reachengine/media/"
+                  nextStep="build csv map"
+                  resultDataDef="tmpAsset"
+    />
+
+
+    <groovyStep name="build csv map"
+                resultDataDef="CsvMap"
+                nextStep="end"
+                executionLabelExpression="Building CSV -> JSON Mapping">
+        <script>
+        <![CDATA[
+            import groovy.*
+            import groovy.json.*
+            import groovy.json.JsonSlurper
+            def csvToJsonMap = [:]                                  //mapping will be key from header paired with mapping built from provided keymap
+            def file = new File(csvPath)
+            def jsonSlurper = new JsonSlurper()
+            def line;
+            def values = []
+            file.withReader { reader ->
+                line = reader.readLine()                            //get line header
+                values = line.split(",")
+                //split header line into values
+                headerMap = [:]                                     //define a map to holder headers and values
+                values.each{ val ->
+                    headerMap[val] = ''                             //set all headers as map with default empty value
+                }
+                //iterate through csv
+                while ((line = reader.readLine()) != null) {
+                    line = line.replace(",,",",Null,")              //replace empty values with null
+                    if(line[line.size()-1] == ",")                  //replace empty trailing value on line
+                        line+="Null"
+                    //split values from line
+                    values = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*\$)");
+                    headerMap.eachWithIndex{ key,value, index ->
+                        headerMap.put(key,values[index])            //set all headers with a value
+                    }
+                    def uniqueKeyValue = headerMap[uniqueKey]       //get the unique key value per each entry
+                    def tmpMap = [:]                                //create tmpMap tp map to csv map
+                    //create tmp map that we will add to main csvMap using json map provided
+                    xmlMapping.fieldNames().each { key ->
+                        if (headerMap.containsKey(key.toString()) && headerMap."$key".toString().length() != 0) {
+                            if(xmlMapping."$key" instanceof Boolean) //<--------------- hard coded fix? why is this issue happening
+                                tmpMap.put("shortDescription", headerMap."$key".toString())
+                            else
+                                tmpMap.put(xmlMapping."$key".textValue(), headerMap."$key".toString())
+                        }
+                    }
+                    csvToJsonMap.put(uniqueKeyValue,tmpMap)          //add tmp map to main csvMap
+                }
+            }
+            return csvToJsonMap                                     //return the csvMap
+            ]]>
+    </script>
+    </groovyStep>
+
+    <groovyStep  name="match directory fileName with CSV metadata entry"
+                 executionLabelExpression="examining asset"
+                 resultDataDef="test"
+                 nextStep="end"
+    >
+
+        <script>
+            <![CDATA[
+
+                import groovy
+                import groovy.json.*
+
+            // call subflow for each individual file in directory
+
+            // in subflow compare if( current filename == any fileName entry in csv?){
+            // mapping file to create json map from values in that csv entry. Return mapped json to data def}
+            //
+            //
+            csvEntries.each { entry ->
+                def mappedValues = [:]
+                if (AssetMaster.fileName == entry.fileName) {
+                    def uuid = entry.uuid
+                    def fileName =entry.fileName
+                    def description = entry.description
+
+                }
+            }
+
+
+            //
+            def output
+            output = 12
+
+            return output
+            ]]>
+        </script>
+
+    </groovyStep>
+
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="end"/>
+
+
+    <!-- ................................................... Data Defs .................................................... -->
+    <!-- ............ INPUT ............. -->
+<!--    <contextDataDef name="directory" dataType="Directory" userInput="true" />-->
+    <contextDataDef name="directoryAsset" dataType="File" userInput="true" />
+    <contextDataDef name="csvMetadataFile" dataType="File" userInput="true" />
+    <contextDataDef name="metadataMapJson" dataType="File" userInput="true" />
+
+
+
+    <!-- ......... PROCESSING ........... -->
+    <contextDataDef name="reachUrl" dataType="String" defaultDataExpression="${#sysconfig('reachengine.url')}"/>
+    <contextDataDef name="tmpAsset" dataType="File" />
+    <contextDataDef name="tmpCsv" dataType="File" />
+    <contextDataDef name="tmpJsonMap" dataType="File" />
+
+<!--    <contextDataDef name="directoryContents" dataType="File" multiple="true" />-->
+<!--    <contextDataDef name="assetMetadata" dataType="Data Object" multiple="true" defaultDataExpression="${directoryAsset.metadata}" />-->
+<!--    <contextDataDef name="test" dataType="Integer" />-->
+
+    <contextDataDef name="CsvMap" dataType="Data Object" multiple="true" />
+    <contextDataDef name="inputCsvPath" dataType="String" defaultDataExpression="${csvMetadataFile?.absolutePath}" />
+</workflow>
