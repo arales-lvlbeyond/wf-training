@@ -1,0 +1,45 @@
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="Ex7_PullAssetnfo_00"
+          name="Ex7_PullAssetnfo_00"
+          executionLabelExpression="Ex7_PullAssetnfo_00"
+          subjectDOClassName=""
+          resultDataDef="AssetOut"
+          showInUserInterface="true"
+          sdkVersion=""
+          description="Pulls out specific Asset info of an Asset"
+>
+
+    <initialStepName>build out JSON</initialStepName>
+    <noopStep name="build out JSON"
+                executionLabelExpression="${AssetOut}"
+                nextStep="create mezzanine">
+
+    </noopStep>
+    
+    <executeSubflowStep name="create mezzanine" 
+                        targetWorkflowId="_createProxiesAnyAsset"
+                        subjectChangePath="${Asset}"
+                        executionLabelExpression="creating mezzanine for {AssetName}"
+                        nextStep="end"/>
+
+    <!-- success -->
+    <noopStep name="end"/>
+    <!-- ................................................... Data Defs .................................................... -->
+    <contextDataDef name="Asset"      dataType="Data Object" defaultDataExpression="${subject}"/>
+    <contextDataDef name="AssetName"  dataType="String"      defaultDataExpression="${Asset.name}"/>
+    <contextDataDef name="AssetType"  dataType="String"      defaultDataExpression="${Asset.assetType.toString()}"/>
+    <contextDataDef name="AssetVar"   dataType="String"      defaultDataExpression="${Asset.metadata.testValueA.toString()}"/>
+    <contextDataDef name="AssetOut"   dataType="String"      defaultDataExpression="${AssetName + '|'+ AssetVar + '|' + AssetType}"/>
+
+
+    <!-- ............ INPUT ............. -->
+
+
+    <!-- ......... PROCESSING ........... -->
+
+
+
+</workflow>

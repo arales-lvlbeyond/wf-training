@@ -23,38 +23,41 @@
           executionLabelExpression="Ex4_gw | "
           subjectDOClassName="AssetMaster"
           showInUserInterface="true"
-          sdkVersion=""
->
+          sdkVersion="">
+#
 
-    <initialStepName>save asset picklist</initialStepName>
+    <initialStepName>save asset metadata</initialStepName>
     <!-- update testMulitPicklist metadata field -->
-    <saveDataObjectStep name="save asset picklist"
-                        executionLabelExpression="Saving metadata on ${subject.name}"
-                        dataObjectExpression="${subject.metadata}"
-                        nextStep="save asset testValueA">
-        <property name="testMulitPicklist">${picklistOptionsToAdd}</property>
-    </saveDataObjectStep>
-    <!-- update testValueA metadata field -->
-    <saveDataObjectStep name="save asset testValueA"
-                        executionLabelExpression="Saving metadata on ${subject.name}"
-                        dataObjectExpression="${subject.metadata}"
-                        nextStep="save asset testValueA1">
-        <property name="testValueA">${int_testValueA}</property>
-    </saveDataObjectStep>
-    <!-- update testValueA1 metadata field -->
-    <saveDataObjectStep name="save asset testValueA1"
-                        executionLabelExpression="Saving metadata on ${subject.name}"
-                        dataObjectExpression="${subject.metadata}"
-                        nextStep="save asset singlePickList">
-        <property name="testValueA1">${str_testValueA1}</property>
-    </saveDataObjectStep>
-    <!-- update testSinglePicklist metadata field -->
-    <saveDataObjectStep name="save asset singlePickList"
+    <saveDataObjectStep name="save asset metadata"
                         executionLabelExpression="Saving metadata on ${subject.name}"
                         dataObjectExpression="${subject.metadata}"
                         nextStep="end">
+        <property name="testMulitPicklist">${picklistOptionsToAdd}</property>
         <property name="testSinglePicklist">${singleListOptionsToAdd}</property>
+        <property name="testValueA">${int_testValueA}</property>
+        <property name="testValueA1">${str_testValueA1}</property>
     </saveDataObjectStep>
+<!--    &lt;!&ndash; update testValueA metadata field &ndash;&gt;-->
+<!--    <saveDataObjectStep name="save asset testValueA"-->
+<!--                        executionLabelExpression="Saving metadata on ${subject.name}"-->
+<!--                        dataObjectExpression="${subject.metadata}"-->
+<!--                        nextStep="save asset testValueA1">-->
+<!--        <property name="testValueA">${int_testValueA}</property>-->
+<!--    </saveDataObjectStep>-->
+<!--    &lt;!&ndash; update testValueA1 metadata field &ndash;&gt;-->
+<!--    <saveDataObjectStep name="save asset testValueA1"-->
+<!--                        executionLabelExpression="Saving metadata on ${subject.name}"-->
+<!--                        dataObjectExpression="${subject.metadata}"-->
+<!--                        nextStep="save asset singlePickList">-->
+<!--        <property name="testValueA1">${str_testValueA1}</property>-->
+<!--    </saveDataObjectStep>-->
+<!--    &lt;!&ndash; update testSinglePicklist metadata field &ndash;&gt;-->
+<!--    <saveDataObjectStep name="save asset singlePickList"-->
+<!--                        executionLabelExpression="Saving metadata on ${subject.name}"-->
+<!--                        dataObjectExpression="${subject.metadata}"-->
+<!--                        nextStep="end">-->
+<!--        <property name="testSinglePicklist">${singleListOptionsToAdd}</property>-->
+<!--    </saveDataObjectStep>-->
 
 
     <!-- Data Defs for updating picklists and displaying PickList-Choices -->

@@ -25,7 +25,9 @@
 	executionLabelExpression="buildSimpleJson | "
 	subjectDOClassName=""
 	showInUserInterface="true"
-	sdkVersion="">
+	sdkVersion=""
+	resultDataDef="resultJson">
+
 
 	<initialStepName>build json</initialStepName>
 	

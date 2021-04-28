@@ -1,0 +1,217 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2020 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://levelsbeyond.com/schema/workflow"
+          xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+          xsi:schemaLocation="http://levelsbeyond.com/schema/latest http://levelsbeyond.com/schema/latest/studio.xsd"
+          id="Ex12_gw"
+          name="Ex12_gw"
+          executionLabelExpression="Ex12_gw | Start Time: ${#newDate()}"
+          subjectDOClassName="AssetCollection"
+          showInUserInterface="true"
+          sdkVersion=""
+>
+
+    <initialStepName>is workflow executing</initialStepName>
+
+
+    <queryStep name="is workflow executing"
+               targetDataObjectClass="WorkflowExecution"
+               resultDataDef="currentExecutions"
+               executionLabelExpression="Check to see if this workflow is currently executing"
+    >
+        <transition condition="${currentExecutions.size() == 0}">
+            <targetStepName>check if batchToProcess is empty</targetStepName>
+        </transition>
+        <transition condition="true">
+            <targetStepName>workflow is running</targetStepName>
+        </transition>
+
+        <criteria>
+            <![CDATA[
+                <criteria>
+                    <and>
+                        <condition property="workflowVersion.workflow.key" op="eq">
+                            <test value="${ #this.workflow.workflowVersion.workflow.key }" />
+                        </condition>
+                        <condition property="uuid" op="noteq">
+                            <test value="${ #this.workflow.uuid }" />
+                        </condition>
+                        <condition property="status" op="in">
+                            <tests>
+                                <test value="CREATED" />
+                                <test value="QUEUED" />
+                                <test value="EXECUTING" />
+                            </tests>
+                        </condition>
+                    </and>
+                </criteria>
+            ]]>
+		</criteria>
+    </queryStep>
+
+
+    <!-- ................................................... Initial Checks .................................................... -->
+    <noopStep name="check if batchToProcess is empty"
+              executionLabelExpression="are there nextBatch in batchToProcess? ${batchToProcess != null AND batchToProcess.size() &gt; 0}"
+    >
+        <transition condition="${batchToProcess != null AND batchToProcess.size() &gt; 0}">
+            <targetStepName>query for running subflows</targetStepName>
+        </transition>
+        <transition condition="true">
+            <targetStepName>no nextBatch to process</targetStepName>
+        </transition>
+    </noopStep>
+
+
+    <!-- ................................................... Queue Loop ................................................... -->
+    <queryStep name="query for running subflows"
+               targetDataObjectClass="WorkflowExecution"
+               resultDataDef="executingSubflows"
+               executionLabelExpression="checking for workflows (with id = ${subflowId}) that are also not in a finished state"
+               devStep="true"
+               nextStep="check running subflows"
+    >
+        <criteria>
+            <![CDATA[
+            <criteria>
+                <and>
+                    <condition property="workflowVersion.workflow.key" op="eq">
+                        <test value="${ingestSubflow}"/>
+                    </condition>
+                    <condition property="executionLabel" op="like">
+							<test value="%<!-- TODO: FILL THIS IN -->%" />
+						</condition>
+                    <condition property="status" op="in">
+                        <tests>
+                            <test value="CREATED" />
+                            <test value="QUEUED" />
+                            <test value="EXECUTING" />
+                         </tests>
+                    </condition>
+                </and>
+            </criteria>
+            ]]>
+		</criteria>
+    </queryStep>
+
+
+    <noopStep name="check running subflows"
+              executionLabelExpression="number of subflows (id = ${subflowId}) running >>> ${executingSubflows.size()} out of ${queueLimit}"
+              devStep="true"
+    >
+        <transition condition="${ executingSubflows.size() &lt; queueLimit }">
+            <targetStepName>ready next nextBatch</targetStepName>
+        </transition>
+        <transition condition="${ true }">
+            <targetStepName>queue full</targetStepName>
+        </transition>
+    </noopStep>
+
+
+    <delayStep name="queue full"
+               delaySecondsExpression="${ queryPollInterval }"
+               executionLabelExpression="${batchToProcess.size()} nextBatch remaining | Subflows running: ${executingSubflows.size()}/${queueLimit} | Waiting ${queryPollInterval} seconds."
+               nextStep="query for running subflows"
+    />
+
+
+    <setContextData name="ready next nextBatch"
+                    targetDataDef="nextnextBatch"
+                    valueExpression="${batchToProcess.size() &gt; batchSize ? batchToProcess.subList(0, batchSize) : batchToProcess.subList(0, batchToProcess.size()) }"
+                    executionLabelExpression="got ${nextnextBatch.size()} nextBatch to process"
+                    nextStep="remove Data Objects from main list"
+                    devStep="true"
+    />
+
+
+    <groovyStep name="remove nextBatch from main list"
+                resultDataDef="batchToProcess"
+                executionLabelExpression="remove ${nextnextBatch.size()} nextBatch from the main list"
+                nextStep="process nextBatch"
+                devStep="true"
+    >
+        <script>
+            <![CDATA[
+	        batchToProcess.removeAll(nextnextBatch)
+	        return batchToProcess
+	     ]]>
+		</script>
+    </groovyStep>
+
+
+    <executeSubflowStep name="process nextBatch"
+                        executionLabelExpression="Preparing ${nextnextBatch.size()} nextBatch. | ${batchToProcess.size()} nextBatch remaining | Subflows running: ${executingSubflows.size()}/${queueLimit}"
+                        targetWorkflowId="${subflowId}"
+                        subjectChangePath="${nextnextBatch}"
+                        waitForCompletionExpression="false"
+                        nextStep="check for more nextBatch"
+    >
+
+    </executeSubflowStep>
+
+
+    <noopStep name="check for more nextBatch"
+              executionLabelExpression="number of nextBatch remaining >>> ${batchToProcess.size()}"
+              devStep="true"
+    >
+        <transition condition="${batchToProcess.size() &gt; 0}">
+            <targetStepName>query for running subflows</targetStepName>
+        </transition>
+        <transition condition="true">
+            <targetStepName>end</targetStepName>
+        </transition>
+    </noopStep>
+
+
+    <!-- ................................................... End Steps .................................................... -->
+    <!-- success -->
+    <noopStep name="no nextBatch to process"
+              pctComplete="99"
+              nextStep="end"
+    />
+
+
+    <noopStep name="end" pctComplete="100"/>
+
+
+    <!-- fail -->
+    <failWorkflowStep name="workflow is running"
+                      executionLabelExpression="Workflow already executing on the directory"
+                      reasonExpression="Workflow already executing on the directory"
+    />
+
+
+    <!-- ............................................... Context Data Defs ................................................ -->
+    <!-- .......... Input Variables .......... -->
+
+
+    <!-- ....... Processing Variables ........ -->
+    <contextDataDef name="currentExecutions" dataType="Data Object" multiple="true"/>
+    <contextDataDef name="batchToProcess"    dataType="Data Object" multiple="true" defaultDataExpression="subject.items"/>
+    <!-- queue loop variables -->
+    <contextDataDef name="nextnextBatch"     dataType="Data Object" multiple="true"/>
+    <contextDataDef name="executingSubflows" dataType="Data Object" multiple="true"/>
+    <contextDataDef name="queueLimit"        dataType="Integer"
+                    defaultDataExpression="${#sysconfig('workflows.Ex12_gw.queueLimit') ?: 11}"/>
+    <contextDataDef name="batchSize"        dataType="Integer"
+                    defaultDataExpression="${#sysconfig('workflows.Ex12_gw.batchSize') ?: 10}"/>
+    <contextDataDef name="queryPollInterval" dataType="Integer"
+                    defaultDataExpression="${#sysconfig('workflows.Ex12_gw.queryPollInterval') ?: 60}"/>
+    <contextDataDef name="subflowId"         dataType="String" defaultDataExpression="Ex7_PullAssetnfo_00"/>
+
+</workflow>
